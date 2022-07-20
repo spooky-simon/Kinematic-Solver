@@ -9,4 +9,4 @@
 
 
 ## Known bugs
-* caster gain shows weird behavior near static
+* caster gain can show weird behavior near static, not expected to cause errors in holistic results
