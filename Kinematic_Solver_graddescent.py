@@ -46,19 +46,24 @@ uo  = Point([-7.1,	    595,	299]) # Upper_Upright_Point
 tri = Point([55.1, 140, 163]) # Tie_Rod_Inner
 tro = Point([55.1, 600, 163]) # Tie_Rod_Outer
 
-unit = "mm" # used in graph axis labels, not used in code
+unit = "mm" # used in graph axis labels, not used in code (yet...)
 
 # Suspension Setup
+# Full jounce and rebound mark the bounds for the solver
+# if they are too large, and cannot be achieved with your linkage system
+# the code will not throw an error but will not finish solving
+full_jounce = 25.4
+full_rebound = -25.4
+# toe, camber and caster are used for static offsets on the graphs
+# these will not affect the solver
 toe = 0
 camber = 0
 caster = 0
-full_jounce = 25.4
-full_rebound = -25.4
 
 # List the points of the suspension that will move
 moving_pts = [uo, lo, tro, wc]
 
-# Input the list of points that each moving point is linked to
+# Input the list of points that each moving point is linked to below
 # This includes linking the upper and lower upright points
 # as that length cannot be allowed to change
 
@@ -80,12 +85,17 @@ cstr_gn_roll = 0
 roll_center_in_roll = 1 # Path of roll center as the car rolls
 
 # Solver Parameters
+# number of steps in each direction, so a value of 10 will yield 20 datapoints
+# num_steps = 5 is lightning fast, gives blocky curve
+# weird stuff happens when you set it to anything between 25 and 50
+# num steps = 100-1000 gives nice smooth lines
+num_steps = 80 
 # happy is the error margin for the gradient descent to be considered complete
-# I found the fastest results are when the learning rate is equal to the error margin
-# if the learning rate is higher than the error margin, it will break (overshoot i think)
+# For some reason you get really ugly data with learning rate < 10^-4 not sure why
 happy = 10**-3
 learning_rate = 10**-3
-num_steps = 5
+# I did not implement a dynamic learning rate because im lazy and this works
+
 
 # Code Below: No Need to Touch
 #%% Gradient Descent
@@ -137,10 +147,6 @@ for i in range(0,num_steps):
     # print(wc.coords)
     for pt in moving_pts:
         pt.jhist.append(pt.coords)
-        if pt == wc:
-            print("step ",i)
-            print("coords: ", pt.coords)
-            print("hist ",pt.jhist)
         pt.coords = pt.coords + v_move
     window = 1
     while window > happy:
@@ -153,7 +159,6 @@ for i in range(0,num_steps):
             pt.coords = pt.coords - step
         err.append(sum(E))
         window = sum(E)
-    print("new coords: ", wc.coords)
 t1 = time.time_ns()
 print("Solved Jounce in",(t1-t0)/10**6, "ms")
 
@@ -229,7 +234,7 @@ cbr_gn = [i - cbr_gn[num_steps] +camber for i in cbr_gn] # compares to static
 # by measuring the angle between the kingpin and the Z axis
 kp_xz = [[x,z] for x,y,z in kp] # project into XZ plane (side view)
 cstr_gn = [-angle([0,1],v) for v in kp_xz] # compare to z axis
-cstr_gn = [i - cbr_gn[num_steps] +caster for i in cbr_gn] # compares to static
+cstr_gn = [i - cstr_gn[num_steps] +caster for i in cstr_gn] # compares to static
 
 # bump_zs is a list of the z height for each iterable in the code compared to static
 # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
