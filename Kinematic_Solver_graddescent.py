@@ -75,6 +75,7 @@ tro.friends = [uo, lo, wc, tri]
 # Plotting
 # On or Off
 # put %matplotlib into the kernel to get pop-out graphs that are interactive
+# if you fix my bad graphs, send me your fix pls
 sus_plt = 1        # Visualize the corner
 bmp_str_plt = 1     # Bump Steer vs vertical travel
 bmp_str_roll = 0    # Sets y axis of bump steer plot to roll angle in deg
@@ -89,7 +90,7 @@ roll_center_in_roll = 1 # Path of roll center as the car rolls
 # num_steps = 5 is lightning fast, gives blocky curve
 # weird stuff happens when you set it to anything between 25 and 50
 # num steps = 100-1000 gives nice smooth lines
-num_steps = 80 
+num_steps = 5
 # happy is the error margin for the gradient descent to be considered complete
 # For some reason you get really ugly data with learning rate < 10^-4 not sure why
 happy = 10**-3
@@ -217,9 +218,9 @@ def pt_to_ln(pt,a,b):
 # Bump Steer
 # Projecting the steeing arm into the XY plane and measuring the angle 
 sa = [pt_to_ln(tro,uo,lo) for tro,uo,lo in zip(tro.hist,uo.hist,lo.hist)]
-sa_xy = [[x,y] for x,y,z in sa]            # project into xy plane (top view)
-bmp_str = [angle(v,[1,0])+toe for v in sa_xy]  # angle bw v1 and x axis
-bmp_str = [i - bmp_str[num_steps] for i in bmp_str]
+sa_xy = [[x,y] for x,y,z in sa]  # project into xy plane (top view)
+bmp_str = [-angle(v,[1,0]) for v in sa_xy]  # angle bw v1 and x axis
+bmp_str = [i - bmp_str[num_steps]+toe for i in bmp_str]
 
 # Camber Gain
 # Projects the kingpin into the YZ plane to meaure camber
