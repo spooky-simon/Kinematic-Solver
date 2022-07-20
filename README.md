@@ -9,4 +9,5 @@
 
 
 ## Known bugs
-* caster gain can show weird behavior near static, not expected to cause errors in holistic results
+* weird stuff can be seen in the caster/camber/toe graphs when you set num_steps to anything between 25 and 100.
+  * I dont know why this happens, and i probably won't fix it. just set it to a bigger or smaller value and it goes away
