@@ -6,3 +6,7 @@
 * See Naming_Convention for double wishbone points naming convention used in this script
 * code should be somewhat commented... algorithm partially stolen from wikipedia
 * approach taken from Spinning Thumbs on yt
+
+
+## Known bugs
+* caster gain shows weird behavior near static
