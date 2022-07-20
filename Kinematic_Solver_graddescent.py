@@ -20,7 +20,7 @@ class Point():
         self.hist = []  # total travel history
         self.friends = [] # list of points that this point is linked to
         self.origin = np.array(coords) # to keep track of the static position
-    
+
     def jr_combine(self):
         # function used to combine jounce and rebound history
         self.rhist.reverse()
@@ -128,7 +128,7 @@ def Obj_Fcn(pt):
         Fx.append(v_norm - l)
     Fx = [(i**2)*0.5 for i in Fx]
     return Fx
-        
+
 # Jacobian of Objective Function
 def Jacobian(pt):
     Jcb = []
@@ -216,7 +216,7 @@ def pt_to_ln(pt,a,b):
     return ptl
 
 # Bump Steer
-# Projecting the steeing arm into the XY plane and measuring the angle 
+# Projecting the steeing arm into the XY plane and measuring the angle
 sa = [pt_to_ln(tro,uo,lo) for tro,uo,lo in zip(tro.hist,uo.hist,lo.hist)]
 sa_xy = [[x,y] for x,y,z in sa]  # project into xy plane (top view)
 bmp_str = [-angle(v,[1,0]) for v in sa_xy]  # angle bw v1 and x axis
@@ -228,7 +228,7 @@ bmp_str = [i - bmp_str[num_steps]+toe for i in bmp_str]
 kp = [a-b for a,b in zip(uo.hist,lo.hist)]
 kp_yz = [[y,z] for x,y,z in kp] # project into YZ plane (front view)
 cbr_gn = [-angle([0,1],v) for v in kp_yz] # compare to z axis
-cbr_gn = [i - cbr_gn[num_steps] +camber for i in cbr_gn] # compares to static 
+cbr_gn = [i - cbr_gn[num_steps] +camber for i in cbr_gn] # compares to static
 
 # Caster change
 # Projects the kingpin into the YZ plane to meaure caster
@@ -294,6 +294,7 @@ rcr = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in rcr_pts]
 if sus_plt:
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
+    ax.view_init(elev=18., azim=-51)
     for pt in [wc,uo,lo,lfi,lai,ufi,uai,tro,tri]:
         ax.scatter(pt.origin[0],pt.origin[1],pt.origin[2])
     for pt in moving_pts:
@@ -372,3 +373,5 @@ if roll_center_in_roll:
     ax.set_ylabel('Vertical Roll Center Travel ['+unit+']')
     ax.set_xlabel('Horizontal Roll Center Travel ['+unit+']')
     ax.set_title('Dynamic Roll Center')
+
+plt.show()
