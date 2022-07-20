@@ -85,7 +85,7 @@ roll_center_in_roll = 1 # Path of roll center as the car rolls
 # if the learning rate is higher than the error margin, it will break (overshoot i think)
 happy = 10**-3
 learning_rate = 10**-3
-num_steps = 1000
+num_steps = 5
 
 # Code Below: No Need to Touch
 #%% Gradient Descent
@@ -107,7 +107,7 @@ def Ass_Fcn(pt):
         Gx.append(v_norm - l)
     return Gx
 
-# Objective Function
+# Objective Function (cost fcn)
 def Obj_Fcn(pt):
     Fx = []
     for friend in pt.friends:
@@ -130,11 +130,19 @@ def Jacobian(pt):
 t0 = time.time_ns()
 err = []
 v_move = [0,0,full_jounce/num_steps]
+# This is the good stuff
+# I'm straight up not explaining gradient decsent in code comments
+# but it loops through each step and solves the whole shibang muy bueno
 for i in range(0,num_steps):
-    window = 1
+    # print(wc.coords)
     for pt in moving_pts:
         pt.jhist.append(pt.coords)
-        pt.coords += v_move
+        if pt == wc:
+            print("step ",i)
+            print("coords: ", pt.coords)
+            print("hist ",pt.jhist)
+        pt.coords = pt.coords + v_move
+    window = 1
     while window > happy:
         for pt in moving_pts:
             J = Jacobian(pt)
@@ -145,6 +153,7 @@ for i in range(0,num_steps):
             pt.coords = pt.coords - step
         err.append(sum(E))
         window = sum(E)
+    print("new coords: ", wc.coords)
 t1 = time.time_ns()
 print("Solved Jounce in",(t1-t0)/10**6, "ms")
 
@@ -161,7 +170,7 @@ for i in range(0,num_steps):
     window = 1
     for pt in moving_pts:
         pt.rhist.append(pt.coords)
-        pt.coords += v_move
+        pt.coords = pt.coords + v_move
     while window > happy:
         for pt in moving_pts:
             J = Jacobian(pt)
@@ -191,6 +200,9 @@ def angle(v1,v2):
     return(ang)
 
 def pt_to_ln(pt,a,b):
+    # This function calculates the shortest vector from point pt to a line
+    # that goes from a to b
+    # The vector that is returned is point to line or ptl
     ln_ab = [a-b for a,b in zip(a,b)]
     ln_ap = [a-b for a,b in zip(a,pt)]
     ab_u = ln_ab / norm(ln_ab)
@@ -198,23 +210,29 @@ def pt_to_ln(pt,a,b):
     return ptl
 
 # Bump Steer
+# Projecting the steeing arm into the XY plane and measuring the angle 
 sa = [pt_to_ln(tro,uo,lo) for tro,uo,lo in zip(tro.hist,uo.hist,lo.hist)]
 sa_xy = [[x,y] for x,y,z in sa]            # project into xy plane (top view)
 bmp_str = [angle(v,[1,0])+toe for v in sa_xy]  # angle bw v1 and x axis
 bmp_str = [i - bmp_str[num_steps] for i in bmp_str]
 
 # Camber Gain
+# Projects the kingpin into the YZ plane to meaure camber
+# by measuring the angle between the kingpin and the Z axis
 kp = [a-b for a,b in zip(uo.hist,lo.hist)]
 kp_yz = [[y,z] for x,y,z in kp] # project into YZ plane (front view)
 cbr_gn = [-angle([0,1],v) for v in kp_yz] # compare to z axis
 cbr_gn = [i - cbr_gn[num_steps] +camber for i in cbr_gn] # compares to static 
 
 # Caster change
-# Camber Gain
-kp = [a-b for a,b in zip(uo.hist,lo.hist)]
+# Projects the kingpin into the YZ plane to meaure caster
+# by measuring the angle between the kingpin and the Z axis
 kp_xz = [[x,z] for x,y,z in kp] # project into XZ plane (side view)
 cstr_gn = [-angle([0,1],v) for v in kp_xz] # compare to z axis
 cstr_gn = [i - cbr_gn[num_steps] +caster for i in cbr_gn] # compares to static
+
+# bump_zs is a list of the z height for each iterable in the code compared to static
+# roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
 
 bump_zs = [xyz[2] - wc.origin[2] for xyz in wc.hist]
 roll_ang = [np.degrees(np.sin(x/wc.origin[1])) for x in bump_zs]
@@ -223,8 +241,9 @@ roll_ang = [np.degrees(np.sin(x/wc.origin[1])) for x in bump_zs]
 # Roll center
 # line intersecting functions taken from
 # https://web.archive.org/web/20111108065352/https://www.cs.mun.ca/%7Erod/2500/notes/numpy-arrays/numpy-arrays.html
+# I don't really get the whole thing but it works so I don't need to think about it
 
-def perp( a ) :
+def perp( a ) : # Creates a perpendicular line segement
     b = np.empty_like(a)
     b[0] = -a[1]
     b[1] = a[0]
@@ -240,7 +259,7 @@ def seg_intersect(a1,a2, b1,b2) :
     return (num / denom)*db + b1
 
 # Get using fore link for upper and lower wishbones
-# Shouldn't change behavior significantly unless dive characteristics are huge
+# Shouldn't change behavior significantly unless anti-dive characteristics are huge
 # project to yz plane
 upr = [ufi.coords[1:] for i in uo.hist]
 lwr = [lfi.coords[1:] for i in lo.hist]
@@ -292,6 +311,18 @@ if sus_plt:
     ax.plot((lo.origin[0],uo.origin[0]),
             (lo.origin[1],uo.origin[1]),
             (lo.origin[2],uo.origin[2]))
+    x1 = [xyz[0] for xyz in tro.hist]
+    y1 = [xyz[1] for xyz in tro.hist]
+    z1 = [xyz[2] for xyz in tro.hist]
+    sax = [xyz[0] for xyz in sa]
+    say = [xyz[1] for xyz in sa]
+    saz = [xyz[2] for xyz in sa]
+    # Code Below Shows Steering Arm change at full jounce and rebound
+    # x2 = [a+b for a,b in zip(x1,sax)]
+    # y2 = [a+b for a,b in zip(y1,say)]
+    # z2 = [a+b for a,b in zip(z1,saz)]
+    # for i in [0, num_steps, 2*num_steps-1]:
+    #     ax.plot((x1[i],x2[i]),(y1[i],y2[i]),(z1[i],z2[i]))
 
 
 if cbr_gn_plt:
