@@ -5,6 +5,7 @@ from numpy.linalg import norm
 from numpy import dot
 from typing import Tuple, List
 from dataclasses import dataclass
+import sys
 
 
 class Point:
@@ -198,7 +199,15 @@ class KinSolve:
             for friend in pt.friends:
                 link = norm(np.array(pt.coords - friend.coords))
                 pt.links.update({friend: link})
-
+                
+        # Error Checking
+        for pt in self.moving_points:
+            for friend in pt.friends:
+                if pt == friend:
+                    sys.exit("Point can't be it's own friend... :(")
+            if len(pt.friends) < 1:
+                sys.exit("Trying to move a point with no friends")
+        
         print("Solving for Jounce Kinematics...")
         t0 = time.time_ns()
         err = []

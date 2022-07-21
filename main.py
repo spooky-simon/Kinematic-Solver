@@ -58,8 +58,6 @@ def main():
 
         unit=unit,
     )
-    # from pprint import pprint
-    # pprint(kin)
 
     """ Solver Parameters """
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
