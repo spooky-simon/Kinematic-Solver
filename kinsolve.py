@@ -9,6 +9,9 @@ from dataclasses import dataclass
 
 class Point:
     def __init__(self, coords):
+        """
+        The potatoes of the meat and potates of the code
+        """
         self.coords = np.array(coords)  # to track coordinates of the point
         self.links = {}  # a dictionary used to link points to each other
         self.jhist = []  # jounce history
@@ -18,7 +21,10 @@ class Point:
         self.origin = np.array(coords)  # to keep track of the static position
 
     def jr_combine(self):
-        # function used to combine jounce and rebound history
+        """
+        Function used to combine jounce and rebound history
+        :return: Full History
+        """
         self.rhist.reverse()
         self.hist = self.rhist + self.jhist
         return self.hist
@@ -29,8 +35,10 @@ class Point:
     def Ass_Fcn(self):
         """
         Associative Function
+        
+        This describes how much longer each link is than it should be
 
-        :return: Gx describes how much longer each link is than it should be
+        :return: Gx
         """
         Gx = []
         for friend in self.friends:
@@ -43,8 +51,10 @@ class Point:
     def Obj_Fcn(self):
         """
         Objective Function (cost fcn)
+        
+        Lower is better
 
-        :return:
+        :return: Cost
         """
         Fx = []
         for friend in self.friends:
@@ -59,7 +69,7 @@ class Point:
         """
         Jacobian of Objective Function
 
-        :return:
+        :return: Jacobian
         """
         Jcb = []
         for friend in self.friends:
@@ -85,6 +95,16 @@ def angle(v1: List[float], v2: List[float]):
 
 
 def pt_to_ln(pt, a, b):
+    """
+    Shortest vector between a point and a line defined by points 'a' and 'b'
+    This vector is also perpendicular to the line ab
+    Used in this code to determine geometric steering arm
+
+    :param pt: A point
+    :param a: A point that defines line ab, also used as the arbitrary point on the line in this algorithm
+    :param b: A point that defines line ab
+    :return: Shortest vector from pt to line ab
+    """
     # This function calculates the shortest vector from point pt to a line
     # that goes from a to b
     # The vector that is returned is point to line or ptl
@@ -97,9 +117,9 @@ def pt_to_ln(pt, a, b):
 
 def perp(a):
     """
-    Creates a perpendicular line segement
+    Creates a perpendicular line segement of a 2-vector
 
-    :param a: line?
+    :param a: line defined by 
     :return: perpendicular line?
     """
     b = np.empty_like(a)
@@ -109,6 +129,12 @@ def perp(a):
 
 
 def seg_intersect(a1, a2, b1, b2):
+    """
+    Determines the instersection of lines A and B
+    A = a2 - a1
+    B = b2 - b1
+    where a1, a2, b1, b2 are points on a plane
+    """
     da = a2 - a1
     db = b2 - b1
     dp = a1 - b1
@@ -156,7 +182,7 @@ class KinSolve:
               offset_caster: float = 0,
               ):
         """
-        Solve stuff(?)
+        Solves stuff
 
         :param steps: Number of steps in each direction. (e.g. 10 -> 20 datapoints)
         :param happy: Error margin for gradient descent to be considered complete

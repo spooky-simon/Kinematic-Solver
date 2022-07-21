@@ -66,7 +66,7 @@ def main():
     # num_steps = 5 is lightning fast, gives blocky curve
     # weird stuff happens when you set it to anything between 25 and 50
     # num steps = 100-1000 gives nice smooth lines
-    num_steps = 5
+    num_steps = 10
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
     happy = 10 ** -3
