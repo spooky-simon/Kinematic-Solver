@@ -18,3 +18,7 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Download Code Here:
+===================
+<a href="https://github.com/spooky-simon/Kinematic-Solver">GitHub Repo</a></p>
