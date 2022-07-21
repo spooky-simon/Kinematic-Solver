@@ -29,6 +29,7 @@ class Point:
     def Ass_Fcn(self):
         """
         Associative Function
+
         :return: Gx describes how much longer each link is than it should be
         """
         Gx = []
@@ -42,6 +43,7 @@ class Point:
     def Obj_Fcn(self):
         """
         Objective Function (cost fcn)
+
         :return:
         """
         Fx = []
@@ -56,6 +58,7 @@ class Point:
     def Jacobian(self):
         """
         Jacobian of Objective Function
+
         :return:
         """
         Jcb = []
@@ -69,6 +72,7 @@ def angle(v1: List[float], v2: List[float]):
     """
     Angle between two vectors
     Arccos of the dot product of two unit vectors
+
     :param v1: Vector 1
     :param v2: Vector 2
     :return: Angle
@@ -94,6 +98,7 @@ def pt_to_ln(pt, a, b):
 def perp(a):
     """
     Creates a perpendicular line segement
+
     :param a: line?
     :return: perpendicular line?
     """
@@ -115,6 +120,9 @@ def seg_intersect(a1, a2, b1, b2):
 
 @dataclass()
 class KinSolve:
+    """
+    Kinematics Solver
+    """
     # Suspension Points
     wheel_center: Point
     lower_wishbone: Tuple[Point, Point, Point]  # Fore_Inner, Aft_Inner, Upright_Point
@@ -149,6 +157,7 @@ class KinSolve:
               ):
         """
         Solve stuff(?)
+
         :param steps: Number of steps in each direction. (e.g. 10 -> 20 datapoints)
         :param happy: Error margin for gradient descent to be considered complete
         :param learning_rate: Learning rate
@@ -303,6 +312,7 @@ class KinSolve:
         """
         Put %matplotlib into the kernel to get pop-out graphs that are interactive
         if you fix my bad graphs, send me your fix pls
+
         :param suspension: Plot suspension graph
         :param bump_steer: Plot bump steer vs vertical travel
         :param camber_gain: Plot camber gain vs vertical traval
