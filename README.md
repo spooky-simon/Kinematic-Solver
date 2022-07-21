@@ -7,6 +7,9 @@
 * code should be somewhat commented... algorithm partially stolen from wikipedia
 * approach taken from Spinning Thumbs on yt
 
+## How to use
+* just download kinsolve.py and main.py into the same folder
+* run main.py and enjoy:)
 
 ## Known bugs
 * weird stuff can be seen in the caster/camber/toe graphs when you set num_steps to anything between 25 and 100.
