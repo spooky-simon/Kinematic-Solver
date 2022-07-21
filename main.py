@@ -18,11 +18,11 @@ def main():
     # Lower Wishbone
     lfi = Point([175.1, 175, 111])  # Lower_Fore_Inner
     lai = Point([-175.1, 175, 111])  # Lower_Aft_Inner
-    lo = Point([-3.1, 608, 114])  # Lower_Upright_Point
+    lo = Point([3.1, 608, 114])  # Lower_Upright_Point
     # Upper Wishbone
     ufi = Point([120.1, 240, 223])  # Upper_Fore_Inner
     uai = Point([-120.1, 240, 216])  # Upper_Aft_Inner
-    uo = Point([-7.1, 595, 299])  # Upper_Upright_Point
+    uo = Point([-1.1, 595, 299])  # Upper_Upright_Point
     # Tie Rod or Steering Rod
     tri = Point([55.1, 140, 163])  # Tie_Rod_Inner
     tro = Point([55.1, 600, 163])  # Tie_Rod_Outer
@@ -64,8 +64,9 @@ def main():
     """ Solver Parameters """
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # num_steps = 5 is lightning fast, gives blocky curve
-    # weird stuff happens when you set it to anything between 25 and 50
-    # num steps = 100-1000 gives nice smooth lines
+    # I have found 10 to be a good middle ground
+    # Weird stuff happens when you set it to anything between 25 and 50
+    # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
     num_steps = 10
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
