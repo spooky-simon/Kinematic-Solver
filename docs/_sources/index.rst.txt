@@ -10,7 +10,9 @@ Welcome to KinSolve's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-
+Download Code Here:
+===================
+https://github.com/spooky-simon/Kinematic-Solver
 
 Indices and tables
 ==================
