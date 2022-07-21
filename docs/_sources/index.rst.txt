@@ -21,4 +21,4 @@ Indices and tables
 
 Download Code Here:
 ===================
-<a href="https://github.com/spooky-simon/Kinematic-Solver">GitHub Repo</a></p>
+https://github.com/spooky-simon/Kinematic-Solver
