@@ -120,8 +120,8 @@ def perp(a):
     """
     Creates a perpendicular line segement of a 2-vector
 
-    :param a: line defined by 
-    :return: perpendicular line?
+    :param a: line, 2D vector
+    :return: perpendicular vector
     """
     b = np.empty_like(a)
     b[0] = -a[1]
