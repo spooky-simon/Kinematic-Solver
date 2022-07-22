@@ -387,14 +387,14 @@ class KinSolve:
             ax.plot((self.lower_wishbone[2].origin[0], self.upper_wishbone[2].origin[0]),
                     (self.lower_wishbone[2].origin[1], self.upper_wishbone[2].origin[1]),
                     (self.lower_wishbone[2].origin[2], self.upper_wishbone[2].origin[2]))
-            x1 = [xyz[0] for xyz in self.tie_rod[1].hist]
-            y1 = [xyz[1] for xyz in self.tie_rod[1].hist]
-            z1 = [xyz[2] for xyz in self.tie_rod[1].hist]
-            sax = [xyz[0] for xyz in self.sa]
-            say = [xyz[1] for xyz in self.sa]
-            saz = [xyz[2] for xyz in self.sa]
-
+            
             # Code Below Shows Steering Arm change at full jounce and rebound
+            # x1 = [xyz[0] for xyz in self.tie_rod[1].hist]
+            # y1 = [xyz[1] for xyz in self.tie_rod[1].hist]
+            # z1 = [xyz[2] for xyz in self.tie_rod[1].hist]
+            # sax = [xyz[0] for xyz in self.sa]
+            # say = [xyz[1] for xyz in self.sa]
+            # saz = [xyz[2] for xyz in self.sa]
             # x2 = [a+b for a,b in zip(x1,sax)]
             # y2 = [a+b for a,b in zip(y1,say)]
             # z2 = [a+b for a,b in zip(z1,saz)]
