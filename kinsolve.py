@@ -173,6 +173,7 @@ class KinSolve:
     roll_angle = None
     bump_zs = None
     roll_center = None
+    instant_center = None
 
     def solve(self,
               steps: int = 5,
@@ -305,12 +306,15 @@ class KinSolve:
         # project to yz plane
         upr = [self.upper_wishbone[0].coords[1:] for i in self.upper_wishbone[2].hist]
         lwr = [self.lower_wishbone[0].coords[1:] for i in self.lower_wishbone[2].hist]
-        uo_xy = [i[1:] for i in self.upper_wishbone[2].hist]
-        lo_xy = [i[1:] for i in self.lower_wishbone[2].hist]
-        ic_pts = zip(upr, uo_xy, lwr, lo_xy)
+        uo_yz = [i[1:] for i in self.upper_wishbone[2].hist]
+        lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
+        ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        fa_gd = [np.array([self.wheel_center.coords[1] - self.wheel_center.origin[1], 0]) for i in
-                 ic]  # front axle at the ground
+        fa_y = [y for x,y,z in self.wheel_center.hist]
+        fa_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        fa_gd = [[y,z] for y,z in zip(fa_y,fa_z)]
+        # fa_gd = [np.array([self.wheel_center.coords[1] - self.wheel_center.origin[1], 0]) for i in
+        #          ic]  # front axle at the ground
         # Roll Center in Heave
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
@@ -321,6 +325,7 @@ class KinSolve:
         # Roll Center in Roll
         opp_ic_r = opp_ic
         opp_ic_r.reverse()
+        opp_fa_gd.reverse()
         # rcr is roll center in roll
         rcr_pts = zip(fa_gd, ic, opp_fa_gd, opp_ic)
         rcr = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rcr_pts]
@@ -333,6 +338,7 @@ class KinSolve:
         self.bump_zs = bump_zs
         self.bump_steer = bmp_str
         self.roll_center = rcr
+        self.instant_center = ic
 
     def plot(self,
              suspension: bool = True,
@@ -442,7 +448,11 @@ class KinSolve:
             fig, ax = plt.subplots()
             xs = [xyz[0] for xyz in self.roll_center]
             ys = [xyz[1] for xyz in self.roll_center]
-            ax.plot(xs, ys)
+            ax.scatter(xs, ys)
+            i = len(self.upper_wishbone[2].hist)//2
+            x1,y1,z1 = self.upper_wishbone[2].hist[i]
+            y2, z2 = self.instant_center[i]
+            ax.plot((y1,y2),(z1,z2))
             ax.set_ylabel('Vertical Roll Center Travel [' + self.unit + ']')
             ax.set_xlabel('Horizontal Roll Center Travel [' + self.unit + ']')
             ax.set_title('Dynamic Roll Center')
