@@ -449,10 +449,10 @@ class KinSolve:
             xs = [xyz[0] for xyz in self.roll_center]
             ys = [xyz[1] for xyz in self.roll_center]
             ax.scatter(xs, ys)
-            i = len(self.upper_wishbone[2].hist)//2
-            x1,y1,z1 = self.upper_wishbone[2].hist[i]
-            y2, z2 = self.instant_center[i]
-            ax.plot((y1,y2),(z1,z2))
+            # i = len(self.upper_wishbone[2].hist)//2
+            # x1,y1,z1 = self.upper_wishbone[2].hist[i]
+            # y2, z2 = self.instant_center[i]
+            # ax.plot((y1,y2),(z1,z2))
             ax.set_ylabel('Vertical Roll Center Travel [' + self.unit + ']')
             ax.set_xlabel('Horizontal Roll Center Travel [' + self.unit + ']')
             ax.set_title('Dynamic Roll Center')
