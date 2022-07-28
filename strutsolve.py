@@ -234,6 +234,10 @@ class StrutSolve:
             window = 1
             while window > happy:
                 for pt in self.moving_points:
+                    if pt == self.wheel_center:
+                        v = self.strut_mount.coords - self.lower_wishbone[2].coords
+                        u = v / norm(v)
+                        self.wheel_center_offset.coords = u * wcl + self.lower_wishbone[2].coords
                     J = pt.Jacobian()
                     G = pt.Ass_Fcn()
                     E = pt.Obj_Fcn()
@@ -262,6 +266,10 @@ class StrutSolve:
             self.wheel_center_offset.rhist.append(self.wheel_center_offset.coords)
             while window > happy:
                 for pt in self.moving_points:
+                    if pt == self.wheel_center:
+                        v = self.strut_mount.coords - self.lower_wishbone[2].coords
+                        u = v / norm(v)
+                        self.wheel_center_offset.coords = u * wcl + self.lower_wishbone[2].coords
                     J = pt.Jacobian()
                     G = pt.Ass_Fcn()
                     E = pt.Obj_Fcn()
@@ -276,6 +284,7 @@ class StrutSolve:
         # Combine Jounce and Rebound into a single list
         for pt in self.moving_points:
             pt.jr_combine()
+        self.wheel_center_offset.jr_combine()
 
         print("Calculating kinematic changes over wheel travel:")
         print("* Bump Steer")
@@ -397,8 +406,9 @@ class StrutSolve:
             ax.plot(xs,ys,zs)
             xs,ys,zs = zip(self.tie_rod[0].origin,self.tie_rod[1].origin)
             ax.plot(xs,ys,zs)
-            xs,ys,zs = zip(self.lower_wishbone[2].origi,self.strut_mount.origin)
+            xs,ys,zs = zip(self.lower_wishbone[2].origin,self.strut_mount.origin)
             ax.plot(xs,ys,zs)
+            print(self.wheel_center_offset.hist)
             xs,ys,zs = zip(*self.wheel_center_offset.hist)
             ax.plot(xs,ys,zs)
 
