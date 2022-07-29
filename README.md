@@ -22,4 +22,5 @@
 ## Known bugs
 * weird stuff can be seen in the caster/camber/toe graphs when you set num_steps to anything between 25 and 100.
   * I dont know why this happens, and i probably won't fix it. just set it to a bigger or smaller value and it goes away
- * Macpherson Strut Roll Center may not be as accurate as I want, no verification for the moment so who knows
+* Macpherson Strut Roll Center may not be as accurate as I want, no verification for the moment so who knows
+* Docs and doc website are out of date, Brian made those at some point and they haven't kept up with code changes and comment additions
