@@ -365,31 +365,36 @@ class KinSolve:
         """
 
         if suspension:
-            print("Plotting suspension graph(?)...")
+            print("Visualizing the Suspension...")
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
             ax.view_init(elev=18., azim=-51)
             for pt in [self.wheel_center, *self.upper_wishbone, *self.lower_wishbone, *self.tie_rod]:
-                ax.scatter(pt.origin[0], pt.origin[1], pt.origin[2])
+                ax.scatter(pt.origin[0], pt.origin[1], pt.origin[2], color = "k", s = 5)
             for pt in self.moving_points:
                 xs, ys, zs = zip(*pt.hist)
-                ax.plot(xs, ys, zs)
+                ax.plot(xs, ys, zs, color = "grey")
 
             ax.plot((self.lower_wishbone[0].origin[0], self.lower_wishbone[2].origin[0]),
                     (self.lower_wishbone[0].origin[1], self.lower_wishbone[2].origin[1]),
-                    (self.lower_wishbone[0].origin[2], self.lower_wishbone[2].origin[2]))
+                    (self.lower_wishbone[0].origin[2], self.lower_wishbone[2].origin[2]),
+                    color = "blue")
             ax.plot((self.lower_wishbone[1].origin[0], self.lower_wishbone[2].origin[0]),
                     (self.lower_wishbone[1].origin[1], self.lower_wishbone[2].origin[1]),
-                    (self.lower_wishbone[1].origin[2], self.lower_wishbone[2].origin[2]))
+                    (self.lower_wishbone[1].origin[2], self.lower_wishbone[2].origin[2]),
+                    color = "blue")
             ax.plot((self.upper_wishbone[1].origin[0], self.upper_wishbone[2].origin[0]),
                     (self.upper_wishbone[1].origin[1], self.upper_wishbone[2].origin[1]),
-                    (self.upper_wishbone[1].origin[2], self.upper_wishbone[2].origin[2]))
+                    (self.upper_wishbone[1].origin[2], self.upper_wishbone[2].origin[2]),
+                    color = "r")
             ax.plot((self.upper_wishbone[0].origin[0], self.upper_wishbone[2].origin[0]),
                     (self.upper_wishbone[0].origin[1], self.upper_wishbone[2].origin[1]),
-                    (self.upper_wishbone[0].origin[2], self.upper_wishbone[2].origin[2]))
+                    (self.upper_wishbone[0].origin[2], self.upper_wishbone[2].origin[2]),
+                    color = "r")
             ax.plot((self.tie_rod[0].origin[0], self.tie_rod[1].origin[0]),
                     (self.tie_rod[0].origin[1], self.tie_rod[1].origin[1]),
-                    (self.tie_rod[0].origin[2], self.tie_rod[1].origin[2]))
+                    (self.tie_rod[0].origin[2], self.tie_rod[1].origin[2]),
+                    color = "g")
             ax.plot((self.lower_wishbone[2].origin[0], self.upper_wishbone[2].origin[0]),
                     (self.lower_wishbone[2].origin[1], self.upper_wishbone[2].origin[1]),
                     (self.lower_wishbone[2].origin[2], self.upper_wishbone[2].origin[2]))
@@ -411,10 +416,10 @@ class KinSolve:
             print("Plotting Camber Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
             if camber_gain_in_deg:
-                ax.plot(self.camber_gain, self.roll_angle)
+                ax.plot(self.camber_gain, self.roll_angle, color = 'k')
                 ax.set_ylabel('Vehicle Roll [deg]')
             else:
-                ax.plot(self.camber_gain, self.bump_zs)
+                ax.plot(self.camber_gain, self.bump_zs, color = 'k')
             ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Camber Change [deg]')
             ax.set_title('Camber Gain')
@@ -423,10 +428,10 @@ class KinSolve:
             print("Plotting Bump Steer vs Vertical Travel...")
             fig, ax = plt.subplots()
             if bump_steer_in_deg:
-                ax.plot(self.bump_steer, self.roll_angle)
+                ax.plot(self.bump_steer, self.roll_angle, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
             else:
-                ax.plot(self.bump_steer, self.bump_zs)
+                ax.plot(self.bump_steer, self.bump_zs, color = 'k')
             ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Toe Change [deg]')
             ax.set_title('Bump Steer')
@@ -435,10 +440,10 @@ class KinSolve:
             print("Plotting Caster Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
             if caster_gain_in_deg:
-                ax.plot(self.caster_gain, self.roll_angle)
+                ax.plot(self.caster_gain, self.roll_angle, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
             else:
-                ax.plot(self.caster_gain, self.bump_zs)
+                ax.plot(self.caster_gain, self.bump_zs, color = 'k')
             ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Caster Change [deg]')
             ax.set_title('Caster Gain')
@@ -448,7 +453,7 @@ class KinSolve:
             fig, ax = plt.subplots()
             xs = [xyz[0] for xyz in self.roll_center]
             ys = [xyz[1] for xyz in self.roll_center]
-            ax.scatter(xs, ys)
+            ax.scatter(xs, ys, color = 'k')
             # i = len(self.upper_wishbone[2].hist)//2
             # x1,y1,z1 = self.upper_wishbone[2].hist[i]
             # y2, z2 = self.instant_center[i]

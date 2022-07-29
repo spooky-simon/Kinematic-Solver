@@ -98,7 +98,7 @@ def main():
 
     """ Plot """
     kin.plot(
-        suspension=False,  # Visualize the corner
+        suspension=True,  # Visualize the corner
         bump_steer=False,  # Bump Steer vs vertical travel
         camber_gain=False,  # Camber Gain vs vertical travel
         caster_gain=False,  # Caster gain plot

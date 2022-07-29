@@ -76,7 +76,7 @@ def main():
     # toe, camber and caster are used for static offsets on the graphs
     # these will not affect the solver
     toe = 0
-    camber = 0
+    camber = 2
     caster = 0
 
     kin.solve(
