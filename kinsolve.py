@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams['axes.titlesize'] = 14
 import time
 from numpy.linalg import norm
 from numpy import dot
@@ -294,7 +295,7 @@ class KinSolve:
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
 
         bump_zs = [xyz[2] - self.wheel_center.origin[2] for xyz in self.wheel_center.hist]
-        roll_ang = [np.degrees(np.sin(x / self.wheel_center.origin[1])) for x in bump_zs]
+        roll_ang = [-np.degrees(np.sin(x / self.wheel_center.origin[1])) for x in bump_zs]
 
         print("* Roll center")
         # line intersecting functions taken from
@@ -339,6 +340,7 @@ class KinSolve:
         self.bump_steer = bmp_str
         self.roll_center = rcr
         self.instant_center = ic
+        self.frontaxle_ground = fa_gd
 
     def plot(self,
              suspension: bool = True,
@@ -413,53 +415,67 @@ class KinSolve:
             #     ax.plot((x1[i],x2[i]),(y1[i],y2[i]),(z1[i],z2[i]))
 
         if camber_gain:
-            print("Plotting Camber Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
             if camber_gain_in_deg:
+                print("Plotting Camber Gain vs Vehicle Roll...")
                 ax.plot(self.camber_gain, self.roll_angle, color = 'k')
                 ax.set_ylabel('Vehicle Roll [deg]')
             else:
+                print("Plotting Camber Gain vs Vertical Travel...")
                 ax.plot(self.camber_gain, self.bump_zs, color = 'k')
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Camber Change [deg]')
-            ax.set_title('Camber Gain')
+            ax.set_title('Camber Gain', pad = 15)
 
-        if bump_steer:
-            print("Plotting Bump Steer vs Vertical Travel...")
+        if bump_steer:     
             fig, ax = plt.subplots()
             if bump_steer_in_deg:
+                print("Plotting Bump Steer vs Vehicle Roll...")
                 ax.plot(self.bump_steer, self.roll_angle, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
             else:
+                print("Plotting Bump Steer vs Vertical Travel...")
                 ax.plot(self.bump_steer, self.bump_zs, color = 'k')
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Toe Change [deg]')
-            ax.set_title('Bump Steer')
+            ax.set_title('Bump Steer', pad = 15)
 
         if caster_gain:
-            print("Plotting Caster Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
             if caster_gain_in_deg:
+                print("Plotting Caster Gain vs Vehicle Roll...")
                 ax.plot(self.caster_gain, self.roll_angle, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
             else:
+                print("Plotting Caster Gain vs Vertical Travel...")
                 ax.plot(self.caster_gain, self.bump_zs, color = 'k')
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Caster Change [deg]')
-            ax.set_title('Caster Gain')
+            ax.set_title('Caster Gain', pad = 15)
 
         if roll_center_in_roll:
+            cmap = plt.cm.get_cmap()
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
             xs = [xyz[0] for xyz in self.roll_center]
             ys = [xyz[1] for xyz in self.roll_center]
-            ax.scatter(xs, ys, color = 'k')
-            # i = len(self.upper_wishbone[2].hist)//2
-            # x1,y1,z1 = self.upper_wishbone[2].hist[i]
-            # y2, z2 = self.instant_center[i]
-            # ax.plot((y1,y2),(z1,z2))
-            ax.set_ylabel('Vertical Roll Center Travel [' + self.unit + ']')
+            norm = plt.Normalize(min(self.roll_angle), max(self.roll_angle))
+            ax.scatter(xs, ys, c = self.roll_angle, cmap = cmap, norm = norm)
+            if all((max(zs)-min(zs) < 5,self.unit == "mm")):
+                z_mid = (max(zs)+min(zs))/2
+                plt.ylim(z_mid-2.5,z_mid+2.5)
+            # debugging code below, ignore
+            # x1,y1,z1 = self.upper_wishbone[2].hist[1]
+            # y2, z2 = self.instant_center[1]
+            # y3,z3 = self.frontaxle_ground[1]
+            # ax.plot((y3,y2),(z3,z2))
+            # x1,y1,z1 = self.upper_wishbone[2].hist[-1]
+            # y2, z2 = self.instant_center[-1]
+            # y3,z3 = self.frontaxle_ground[-1]
+            # ax.plot((y3,y2),(z3,z2))
+            ax.set_ylabel(  'Vertical Roll Center Travel [' + self.unit + ']')
             ax.set_xlabel('Horizontal Roll Center Travel [' + self.unit + ']')
-            ax.set_title('Dynamic Roll Center')
+            ax.set_title('Dynamic Roll Center', pad = 15)
+            fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, label = 'Roll [deg]')
 
         plt.show()
