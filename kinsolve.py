@@ -454,16 +454,17 @@ class KinSolve:
             ax.set_title('Caster Gain', pad = 15)
 
         if roll_center_in_roll:
-            cmap = plt.cm.get_cmap()
+            # cmap = plt.cm.get_cmap('cividis')
+            cmap = plt.cm.get_cmap('brg')
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
-            xs = [xyz[0] for xyz in self.roll_center]
-            ys = [xyz[1] for xyz in self.roll_center]
+            ys = [yz[0] for yz in self.roll_center]
+            zs = [yz[1] for yz in self.roll_center]
             norm = plt.Normalize(min(self.roll_angle), max(self.roll_angle))
-            ax.scatter(xs, ys, c = self.roll_angle, cmap = cmap, norm = norm)
-            if all((max(zs)-min(zs) < 5,self.unit == "mm")):
+            ax.scatter(ys, zs, c = self.roll_angle, cmap = cmap, norm = norm)
+            if all((max(zs)-min(zs) < 3,self.unit == "mm")):
                 z_mid = (max(zs)+min(zs))/2
-                plt.ylim(z_mid-2.5,z_mid+2.5)
+                plt.ylim(z_mid-1.5,z_mid+1.5)
             # debugging code below, ignore
             # x1,y1,z1 = self.upper_wishbone[2].hist[1]
             # y2, z2 = self.instant_center[1]
