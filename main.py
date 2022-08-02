@@ -9,12 +9,12 @@ from kinsolve import *
 
 
 def main():
-    unit = "mm"  # used in graph axis labels, not used in code (yet...)
 
     """ Suspension Points """
     # In form of Point([x,y,z])
     # Wheel_Center
-    wc = Point([0, 630, 203])
+    # Y point of wc should be track width / 2
+    wc = Point([0, 1245/2, 203])
     # Lower Wishbone
     lfi = Point([175.1, 175, 111.45])  # Lower_Fore_Inner
     lai = Point([-175.1, 175, 111.45])  # Lower_Aft_Inner
@@ -26,19 +26,27 @@ def main():
     # Tie Rod or Steering Rod
     tri = Point([55.1, 140, 163])  # Tie_Rod_Inner
     tro = Point([55.1, 600, 163])  # Tie_Rod_Outer
+    
+    unit = "mm"  # used in graph axis labels, not used in code (yet...)
+
+    
     # Push Rod or Pull Rod
-    # Optional input
     # Not used for kinematics, only used for link-force solving
     # when I finish and publish it, you can ignore for now
-    pri = Point([55.1, 140, 163])  # P_Rod_Inner
-    pro = Point([55.1, 600, 163])  # P_Rod_Outer
+    # pri = Point([55.1, 140, 163])  # P_Rod_Inner
+    # pro = Point([55.1, 600, 163])  # P_Rod_Outer
 
     """ Suspension Setup """
     # Full jounce and rebound mark the bounds for the solver
     # if they are too large, and cannot be achieved with your linkage system
-    # the code will not throw an error but will not finish solving
+    # the code will not throw an error but will either not finish solving or give erroneous results
     full_jounce = 25.4
     full_rebound = -25.4
+    # toe, camber and caster are used for static offsets on the graphs
+    # these will not affect the solver
+    toe = 0
+    camber = 0
+    caster = 0
 
     """ List the points of the suspension that will move """
     # default of [uo, lo, tro, wc] should apply to most double wishbone setups
@@ -53,7 +61,7 @@ def main():
     uo.friends = [ufi, uai, wc, tro, lo]
     lo.friends = [lfi, lai, wc, tro, uo]
     tro.friends = [uo, lo, wc, tri]
-
+    
     kin = KinSolve(
         wheel_center=wc,
         lower_wishbone=(lfi, lai, lo),
@@ -80,13 +88,7 @@ def main():
     happy = 10 ** -3
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
-
-    # toe, camber and caster are used for static offsets on the graphs
-    # these will not affect the solver
-    toe = 0
-    camber = 0
-    caster = 0
-
+    
     kin.solve(
         steps=num_steps,
         happy=happy,
