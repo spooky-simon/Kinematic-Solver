@@ -273,7 +273,7 @@ class KinSolve:
         sa = [pt_to_ln(tro, uo, lo) for tro, uo, lo in
               zip(self.tie_rod[1].hist, self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
         sa_xy = [[x, y] for x, y, z in sa]  # project into xy plane (top view)
-        bmp_str = [-angle(v, [1, 0]) for v in sa_xy]  # angle bw v1 and x axis
+        bmp_str = [angle(v, [1, 0]) for v in sa_xy]  # angle bw v1 and x axis
         bmp_str = [i - bmp_str[steps] + offset_toe for i in bmp_str]
 
         print("* Camber Gain")
@@ -281,7 +281,7 @@ class KinSolve:
         # by measuring the angle between the kingpin and the Z axis
         kp = [a - b for a, b in zip(self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
         kp_yz = [[y, z] for x, y, z in kp]  # project into YZ plane (front view)
-        cbr_gn = [-angle([0, 1], v) for v in kp_yz]  # compare to z axis
+        cbr_gn = [angle([0, 1], v) for v in kp_yz]  # compare to z axis
         cbr_gn = [i - cbr_gn[steps] + offset_camber for i in cbr_gn]  # compares to static
 
         print("* Caster changes")
@@ -370,13 +370,12 @@ class KinSolve:
             print("Visualizing the Suspension...")
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
-            ax.view_init(elev=18., azim=-51)
+            ax.view_init(elev=18., azim=26)
             for pt in [self.wheel_center, *self.upper_wishbone, *self.lower_wishbone, *self.tie_rod]:
                 ax.scatter(pt.origin[0], pt.origin[1], pt.origin[2], color = "k", s = 5)
             for pt in self.moving_points:
                 xs, ys, zs = zip(*pt.hist)
                 ax.plot(xs, ys, zs, color = "grey")
-
             ax.plot((self.lower_wishbone[0].origin[0], self.lower_wishbone[2].origin[0]),
                     (self.lower_wishbone[0].origin[1], self.lower_wishbone[2].origin[1]),
                     (self.lower_wishbone[0].origin[2], self.lower_wishbone[2].origin[2]),
@@ -400,8 +399,12 @@ class KinSolve:
             ax.plot((self.lower_wishbone[2].origin[0], self.upper_wishbone[2].origin[0]),
                     (self.lower_wishbone[2].origin[1], self.upper_wishbone[2].origin[1]),
                     (self.lower_wishbone[2].origin[2], self.upper_wishbone[2].origin[2]))
-            
+            ax.set_title('Corner Visualization', pad = 15)
+            ax.set_xlabel('x ['+self.unit+']')
+            ax.set_ylabel('y ['+self.unit+']')
+            ax.set_zlabel('z ['+self.unit+']')
             # Code Below Shows Steering Arm change at full jounce and rebound
+            # Used for debugging, you can ignore
             # x1 = [xyz[0] for xyz in self.tie_rod[1].hist]
             # y1 = [xyz[1] for xyz in self.tie_rod[1].hist]
             # z1 = [xyz[2] for xyz in self.tie_rod[1].hist]
@@ -411,11 +414,29 @@ class KinSolve:
             # x2 = [a+b for a,b in zip(x1,sax)]
             # y2 = [a+b for a,b in zip(y1,say)]
             # z2 = [a+b for a,b in zip(z1,saz)]
+            # num_steps = len(x2)//2
+            # fig = plt.figure()
+            # ax = fig.add_subplot(111, projection='3d')
+            # for i in [0, num_steps, 2*num_steps-1]:
+            #     ax.plot((x1[i],x2[i]),(y1[i],y2[i]),(z1[i],z2[i]))
+            
+            # Code Below Shows King Pin change at full jounce and rebound
+            # Used for debugging, you can ignore
+            # x1 = [xyz[0] for xyz in self.upper_wishbone[2].hist]
+            # y1 = [xyz[1] for xyz in self.upper_wishbone[2].hist]
+            # z1 = [xyz[2] for xyz in self.upper_wishbone[2].hist]
+            # x2 =  [xyz[0] for xyz in self.lower_wishbone[2].hist]
+            # y2 = [xyz[1] for xyz in self.lower_wishbone[2].hist]
+            # z2 = [xyz[2] for xyz in self.lower_wishbone[2].hist]
+            # num_steps = len(x2)//2
+            # fig = plt.figure()
+            # ax = fig.add_subplot(111, projection='3d')
             # for i in [0, num_steps, 2*num_steps-1]:
             #     ax.plot((x1[i],x2[i]),(y1[i],y2[i]),(z1[i],z2[i]))
 
         if camber_gain:
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if camber_gain_in_deg:
                 print("Plotting Camber Gain vs Vehicle Roll...")
                 ax.plot(self.camber_gain, self.roll_angle, color = 'k')
@@ -429,6 +450,7 @@ class KinSolve:
 
         if bump_steer:     
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if bump_steer_in_deg:
                 print("Plotting Bump Steer vs Vehicle Roll...")
                 ax.plot(self.bump_steer, self.roll_angle, color = 'k')
@@ -437,11 +459,12 @@ class KinSolve:
                 print("Plotting Bump Steer vs Vertical Travel...")
                 ax.plot(self.bump_steer, self.bump_zs, color = 'k')
                 ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
-            ax.set_xlabel('Toe Change [deg]')
+            ax.set_xlabel('Toe [deg]\n<- toe in     toe out->', multialignment='center')
             ax.set_title('Bump Steer', pad = 15)
 
         if caster_gain:
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if caster_gain_in_deg:
                 print("Plotting Caster Gain vs Vehicle Roll...")
                 ax.plot(self.caster_gain, self.roll_angle, color = 'k')
@@ -455,7 +478,7 @@ class KinSolve:
 
         if roll_center_in_roll:
             # cmap = plt.cm.get_cmap('cividis')
-            cmap = plt.cm.get_cmap('brg')
+            cmap = plt.cm.get_cmap('turbo')
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
             ys = [yz[0] for yz in self.roll_center]
