@@ -311,25 +311,29 @@ class KinSolve:
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        fa_y = [y for x,y,z in self.wheel_center.hist]
-        fa_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
-        fa_gd = [[y,z] for y,z in zip(fa_y,fa_z)]
-        # fa_gd = [np.array([self.wheel_center.coords[1] - self.wheel_center.origin[1], 0]) for i in
+        cp_y = [y for x,y,z in self.wheel_center.hist]
+        cp_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        cp_yz = [[y,z] for y,z in zip(cp_y,cp_z)]
+        # cp_yz = [np.array([self.wheel_center.coords[1] - self.wheel_center.origin[1], 0]) for i in
         #          ic]  # front axle at the ground
         # Roll Center in Heave
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
-        opp_fa_gd = [np.array([-y, z]) for y, z in fa_gd]
+        opp_cp_yz = [np.array([-y, z]) for y, z in cp_yz]
         # rch is roll center in heave
-        rch_pts = zip(fa_gd, ic, opp_fa_gd, opp_ic)
+        rch_pts = zip(cp_yz, ic, opp_cp_yz, opp_ic)
         rch = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rch_pts]
         # Roll Center in Roll
         opp_ic_r = opp_ic
         opp_ic_r.reverse()
-        opp_fa_gd.reverse()
+        opp_cp_yz.reverse()
         # rcr is roll center in roll
-        rcr_pts = zip(fa_gd, ic, opp_fa_gd, opp_ic)
+        rcr_pts = zip(cp_yz, ic, opp_cp_yz, opp_ic)
         rcr = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rcr_pts]
+        
+        print("* Scrub Radius changes")
+        # Intersects kingpin_yz with line [0,0], then gets norm to contact patch
+        
 
         # Save calculated values
         self.sa = sa
@@ -340,7 +344,7 @@ class KinSolve:
         self.bump_steer = bmp_str
         self.roll_center = rcr
         self.instant_center = ic
-        self.frontaxle_ground = fa_gd
+        self.contactpatch_yz = cp_yz
 
     def plot(self,
              suspension: bool = True,
@@ -491,11 +495,11 @@ class KinSolve:
             # debugging code below, ignore
             # x1,y1,z1 = self.upper_wishbone[2].hist[1]
             # y2, z2 = self.instant_center[1]
-            # y3,z3 = self.frontaxle_ground[1]
+            # y3,z3 = self.contactpatch_yz[1]
             # ax.plot((y3,y2),(z3,z2))
             # x1,y1,z1 = self.upper_wishbone[2].hist[-1]
             # y2, z2 = self.instant_center[-1]
-            # y3,z3 = self.frontaxle_ground[-1]
+            # y3,z3 = self.contactpatch_yz[-1]
             # ax.plot((y3,y2),(z3,z2))
             ax.set_ylabel(  'Vertical Roll Center Travel [' + self.unit + ']')
             ax.set_xlabel('Horizontal Roll Center Travel [' + self.unit + ']')
