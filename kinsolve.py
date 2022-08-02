@@ -333,7 +333,9 @@ class KinSolve:
         
         print("* Scrub Radius changes")
         # Intersects kingpin_yz with line [0,0], then gets norm to contact patch
-        
+        sr_pts = zip(uo_yz,lo_yz,cp_yz,opp_cp_yz)
+        kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
+        sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
 
         # Save calculated values
         self.sa = sa
@@ -345,16 +347,19 @@ class KinSolve:
         self.roll_center = rcr
         self.instant_center = ic
         self.contactpatch_yz = cp_yz
+        self.scrub_radius = sr
 
     def plot(self,
              suspension: bool = True,
              bump_steer: bool = True,
              camber_gain: bool = True,
              caster_gain: bool = True,
+             scrub_gain: bool = True,
              roll_center_in_roll=True,
              bump_steer_in_deg: bool = False,
              camber_gain_in_deg: bool = False,
              caster_gain_in_deg: bool = False,
+             scrub_gain_in_deg: bool = False
              ):
         """
         Put %matplotlib into the kernel to get pop-out graphs that are interactive
@@ -479,6 +484,20 @@ class KinSolve:
                 ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
             ax.set_xlabel('Caster Change [deg]')
             ax.set_title('Caster Gain', pad = 15)
+            
+        if scrub_gain:
+            fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
+            if caster_gain_in_deg:
+                print("Plotting Scrub Radius vs Vehicle Roll...")
+                ax.plot(self.scrub_radius, self.roll_angle, color = 'k')
+                ax.set_xlabel('Vehicle Roll [deg]')
+            else:
+                print("Plotting Scrub Radius vs Vertical Travel...")
+                ax.plot(self.scrub_radius, self.bump_zs, color = 'k')
+                ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
+            ax.set_xlabel('Scrub Radius ['+self.unit+']')
+            ax.set_title('Scrub Radius Change', pad = 15)
 
         if roll_center_in_roll:
             # cmap = plt.cm.get_cmap('cividis')
