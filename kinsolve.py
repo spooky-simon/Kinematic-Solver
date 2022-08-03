@@ -6,6 +6,7 @@ from numpy.linalg import norm
 from numpy import dot
 from typing import Tuple, List
 from dataclasses import dataclass
+import matplotlib.collections as mcoll
 import sys
 
 
@@ -504,6 +505,10 @@ class KinSolve:
             zs = [yz[1] for yz in self.roll_center]
             norm = plt.Normalize(min(self.roll_angle), max(self.roll_angle))
             ax.scatter(ys, zs, c = self.roll_angle, cmap = cmap, norm = norm)
+            points = np.array([ys, zs]).T.reshape(-1, 1, 2)
+            segments = np.concatenate([points[:-1], points[1:]], axis=1)
+            lc = mcoll.LineCollection(segments, array = self.roll_angle, cmap = cmap, norm = norm)
+            ax.add_collection(lc)
             if all((max(zs)-min(zs) < 3,self.unit == "mm")):
                 z_mid = (max(zs)+min(zs))/2
                 plt.ylim(z_mid-1.5,z_mid+1.5)
