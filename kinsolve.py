@@ -319,9 +319,6 @@ class KinSolve:
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
         opp_cp_yz = [np.array([-y, z]) for y, z in cp_yz]
-        # rch is roll center in heave
-        rch_pts = zip(cp_yz, ic, opp_cp_yz, opp_ic)
-        rch = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rch_pts]
         # Roll Center in Roll
         opp_ic_r = opp_ic
         opp_ic_r.reverse()
