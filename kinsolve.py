@@ -239,7 +239,6 @@ class KinSolve:
         # Reset to do rebound
         for pt in self.moving_points:
             pt.coords = pt.origin
-        mid_pt_index = 1
         err = []
         v_move = [0, 0, self.full_rebound / steps]
 

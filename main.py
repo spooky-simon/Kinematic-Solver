@@ -105,7 +105,7 @@ def main():
         camber_gain=False,  # Camber Gain vs vertical travel
         caster_gain=False,  # Caster gain plot
         scrub_gain = True, # Scrub change plot
-        roll_center_in_roll=False,  # Path of roll center as the car rolls
+        roll_center_in_roll=True,  # Path of roll center as the car rolls
         bump_steer_in_deg=False,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=True,  # Sets y-axis of camber gain plot to roll angle in deg
         caster_gain_in_deg=False,  # Sets y-axis of caster gain plot to roll angle in deg
