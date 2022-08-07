@@ -234,6 +234,9 @@ class KinSolve:
                     pt.coords = pt.coords - step
                 err.append(sum(E))
                 window = sum(E)
+            if steps < self.full_jounce:
+                v_move[1] = v_move[1] + (self.upper_wishbone[2].coords[1] 
+                                          - self.upper_wishbone[2].origin[1])*0.01
         for pt in self.moving_points:
             pt.jhist.append(pt.coords)
         t1 = time.time_ns()
@@ -262,6 +265,9 @@ class KinSolve:
                     pt.coords = pt.coords - step
                 err.append(sum(E))
                 window = sum(E)
+            if steps < self.full_rebound:
+                v_move[1] = v_move[1] + (self.upper_wishbone[2].coords[1] 
+                                          - self.upper_wishbone[2].origin[1])*0.01
         for pt in self.moving_points:
             pt.rhist.append(pt.coords)
         t1 = time.time_ns()

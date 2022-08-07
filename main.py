@@ -55,7 +55,7 @@ def main():
     """ List the points of the suspension that will move """
     # default of [uo, lo, tro, wc] should apply to most double wishbone setups
     moving_pts = [uo, lo, tro, wc]
-    # steer_pts  = [tro, wc]
+    # steer_pts  = [tro, wc] # ignore for now, going to implement a steering solver
 
     """ Input the list of points that each moving point is linked to below. """
     # Each point listed in moving_points needs a list of friends.
@@ -105,16 +105,16 @@ def main():
 
     """ Plot """
     kin.plot(
-        suspension=True,  # Visualize the corner
-        bump_steer=True,  # Bump Steer vs vertical travel
-        camber_gain=True,  # Camber Gain vs vertical travel
-        caster_gain=True,  # Caster gain plot
-        scrub_gain = True, # Scrub change plot
-        roll_center_in_roll=True,  # Path of roll center as the car rolls
+        suspension=False,  # Visualize the corner
+        bump_steer=False,  # Bump Steer vs vertical travel
+        camber_gain=False,  # Camber Gain vs vertical travel
+        caster_gain=False,  # Caster gain plot
+        scrub_gain = False, # Scrub change plot
+        roll_center_in_roll=False,  # Path of roll center as the car rolls
         bump_steer_in_deg=False,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=True,  # Sets y-axis of camber gain plot to roll angle in deg
         caster_gain_in_deg=False,  # Sets y-axis of caster gain plot to roll angle in deg
-        scrub_gain_in_deg = True    # Sets y-axis of scrub gain plot to roll angle in deg
+        scrub_gain_in_deg = False    # Sets y-axis of scrub gain plot to roll angle in deg
     )
 
 
