@@ -234,6 +234,8 @@ class KinSolve:
                     pt.coords = pt.coords - step
                 err.append(sum(E))
                 window = sum(E)
+        for pt in self.moving_points:
+            pt.jhist.append(pt.coords)
         t1 = time.time_ns()
         print("Solved Jounce in", (t1 - t0) / 10 ** 6, "ms")
 
@@ -260,6 +262,8 @@ class KinSolve:
                     pt.coords = pt.coords - step
                 err.append(sum(E))
                 window = sum(E)
+        for pt in self.moving_points:
+            pt.rhist.append(pt.coords)
         t1 = time.time_ns()
         print("Solved rebound in", (t1 - t0) / 10 ** 6, "ms")
 
