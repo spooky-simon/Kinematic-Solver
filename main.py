@@ -43,9 +43,9 @@ def main():
     full_jounce = 25.4
     full_rebound = -25.4
     # Suspension Parameters for Steering Solver
-    rack_travel = 25
-    wb = 1535
-    tw = 1245
+    rack_travel = 25 # travel of the steering rack (or analagous if rack not used)
+    wb = 1535        # wheel base
+    tw = 1245        # track width
     # toe, camber and caster are used for static offsets on the graphs
     # these will not affect the solver
     toe = 0
@@ -55,7 +55,7 @@ def main():
     """ List the points of the suspension that will move """
     # default of [uo, lo, tro, wc] should apply to most double wishbone setups
     moving_pts = [uo, lo, tro, wc]
-    steer_pts  = [tro, wc]
+    # steer_pts  = [tro, wc]
 
     """ Input the list of points that each moving point is linked to below. """
     # Each point listed in moving_points needs a list of friends.
