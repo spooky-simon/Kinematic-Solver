@@ -65,7 +65,7 @@ class Point:
             v_norm = norm(v)  # link length
             l = self.links[friend]  # link target
             Fx.append(v_norm - l)
-        Fx = [(i ** 2) * 0.5 for i in Fx]
+        Fx = [(i ** 2) / 5 for i in Fx]
         return Fx
 
     def Jacobian(self):
