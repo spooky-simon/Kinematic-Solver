@@ -87,7 +87,7 @@ def main():
     # I have found 10 to be a good middle ground
     # Weird stuff happens when you set it to anything between 25 and 50
     # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
-    num_steps = 10
+    num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
     happy = 10 ** -3
@@ -105,8 +105,8 @@ def main():
 
     """ Plot """
     kin.plot(
-        suspension=False,  # Visualize the corner
-        bump_steer=False,  # Bump Steer vs vertical travel
+        suspension=True,  # Visualize the corner
+        bump_steer=True,  # Bump Steer vs vertical travel
         camber_gain=False,  # Camber Gain vs vertical travel
         caster_gain=False,  # Caster gain plot
         scrub_gain = False, # Scrub change plot
