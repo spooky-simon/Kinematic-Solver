@@ -35,50 +35,50 @@ class Point:
     def __repr__(self) -> str:
         return self.coords.__str__()
 
-    def Ass_Fcn(self):
-        """
-        Associative Function
+    # def Ass_Fcn(self):
+    #     """
+    #     Associative Function
         
-        This describes how much longer each link is than it should be
+    #     This describes how much longer each link is than it should be
 
-        :return: Gx
-        """
-        Gx = []
-        for friend in self.friends:
-            v = self.coords - friend.coords  # link vector
-            v_norm = norm(v)  # link length
-            l = self.links[friend]  # link target
-            Gx.append(v_norm - l)
-        return Gx
+    #     :return: Gx
+    #     """
+    #     Gx = []
+    #     for friend in self.friends:
+    #         v = self.coords - friend.coords  # link vector
+    #         v_norm = norm(v)  # link length
+    #         l = self.links[friend]  # link target
+    #         Gx.append(v_norm - l)
+    #     return Gx
 
-    def Obj_Fcn(self):
-        """
-        Objective Function (cost fcn)
+    # def Obj_Fcn(self):
+    #     """
+    #     Objective Function (cost fcn)
         
-        Lower is better
+    #     Lower is better
 
-        :return: Cost
-        """
-        Fx = []
-        for friend in self.friends:
-            v = self.coords - friend.coords  # link vector
-            v_norm = norm(v)  # link length
-            l = self.links[friend]  # link target
-            Fx.append(v_norm - l)
-        Fx = [(i ** 2) / 5 for i in Fx]
-        return Fx
+    #     :return: Cost
+    #     """
+    #     Fx = []
+    #     for friend in self.friends:
+    #         v = self.coords - friend.coords  # link vector
+    #         v_norm = norm(v)  # link length
+    #         l = self.links[friend]  # link target
+    #         Fx.append(v_norm - l)
+    #     Fx = [(i ** 2) / 2 for i in Fx]
+    #     return Fx
 
-    def Jacobian(self):
-        """
-        Jacobian of Objective Function
+    # def Jacobian(self):
+    #     """
+    #     Jacobian of Objective Function
 
-        :return: Jacobian
-        """
-        Jcb = []
-        for friend in self.friends:
-            df = 2 * (self.coords - friend.coords)
-            Jcb.append(df)
-        return np.array(Jcb)
+    #     :return: Jacobian
+    #     """
+    #     Jcb = []
+    #     for friend in self.friends:
+    #         df = 2 * (self.coords - friend.coords)
+    #         Jcb.append(df)
+    #     return np.array(Jcb)
 
 
 def angle(v1: List[float], v2: List[float]):
@@ -162,9 +162,6 @@ class KinSolve:
     full_jounce: float
     full_rebound: float
 
-    # Points of the suspension that will move
-    moving_points: List[Point]
-
     unit: str = "mm"
 
     # Solved values
@@ -195,16 +192,28 @@ class KinSolve:
         :param offset_camber: Static offset
         :param offset_caster: Static offset
         """
+        
+        moving_points = [self.wheel_center,
+                          self.tie_rod[1],
+                          self.upper_wishbone[2],
+                          self.lower_wishbone[2]]
 
         """ Gradient Descent """
         # Derive link lengths for use in Grad Descent
-        for pt in self.moving_points:
+        for pt in moving_points:
             for friend in pt.friends:
                 link = norm(np.array(pt.coords - friend.coords))
                 pt.links.update({friend: link})
+        linked_pairs = []
+        
+        for pt in moving_points:
+            for friend in pt.friends:
+                if [friend,pt] not in linked_pairs:
+                    linked_pairs.append([pt,friend])
+        link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
                 
         # Error Checking
-        for pt in self.moving_points:
+        for pt in moving_points:
             for friend in pt.friends:
                 if pt == friend:
                     sys.exit("Point can't be it's own friend... :(")
@@ -219,58 +228,62 @@ class KinSolve:
         # I'm straight up not explaining gradient decsent in code comments
         # but it loops through each step and solves the whole shibang muy bueno
         for i in range(0, steps):
-            # print(wc.coords)
-            for pt in self.moving_points:
+            
+            for pt in moving_points:
                 pt.jhist.append(pt.coords)
                 pt.coords = pt.coords + v_move
-            window = 1
-            while window > happy:
-                for pt in self.moving_points:
-                    J = pt.Jacobian()
-                    G = pt.Ass_Fcn()
-                    E = pt.Obj_Fcn()
-                    JT = J.T
-                    step = learning_rate * JT @ G
-                    pt.coords = pt.coords - step
-                err.append(sum(E))
-                window = sum(E)
+            error = 1
+            err.append([])
+            while error > happy:
+                # link_vectors = [a.coords-b.coords for [a,b] in linked_pairs]
+                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
+                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
+                obj_func = [(i**2)*0.5 for i in ass_func]
+                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
+                step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
+                error = sum(obj_func)
+                for pair,step_ in zip(linked_pairs,step):
+                    pair[0].coords = pair[0].coords - step_
+                err[i].append(error)
+            # v_move[1] = wc.coords[1] - wc.jhist[-1][1]
             v_move[1] = self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1]
-        for pt in self.moving_points:
+        for pt in moving_points:
             pt.jhist.append(pt.coords)
         t1 = time.time_ns()
         print("Solved Jounce in", (t1 - t0) / 10 ** 6, "ms")
 
         # Reset to do rebound
-        for pt in self.moving_points:
+        for pt in moving_points:
             pt.coords = pt.origin
         err = []
         v_move = [0, 0, self.full_rebound / steps]
 
         print("Solving for Rebound Kinematics...")
         t0 = time.time_ns()
-        for i in range(0, steps):
-            window = 1
-            for pt in self.moving_points:
+        for i in range(0, steps): 
+            for pt in moving_points:
                 pt.rhist.append(pt.coords)
                 pt.coords = pt.coords + v_move
-            while window > happy:
-                for pt in self.moving_points:
-                    J = pt.Jacobian()
-                    G = pt.Ass_Fcn()
-                    E = pt.Obj_Fcn()
-                    JT = J.T
-                    step = learning_rate * JT @ G
-                    pt.coords = pt.coords - step
-                err.append(sum(E))
-                window = sum(E)
+            error = 1
+            err.append([])
+            while error > happy:
+                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
+                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
+                obj_func = [(i**2)*0.5 for i in ass_func]
+                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
+                step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
+                error = sum(obj_func)
+                for pair,step_ in zip(linked_pairs,step):
+                    pair[0].coords = pair[0].coords - step_
+                err[i].append(error)
             v_move[1] = self.wheel_center.coords[1] - self.wheel_center.rhist[-1][1]
-        for pt in self.moving_points:
+        for pt in moving_points:
             pt.rhist.append(pt.coords)
         t1 = time.time_ns()
         print("Solved rebound in", (t1 - t0) / 10 ** 6, "ms")
 
         # Combine Jounce and Rebound into a single list
-        for pt in self.moving_points:
+        for pt in moving_points:
             pt.jr_combine()
 
         print("Calculating kinematic changes over wheel travel:")
@@ -351,6 +364,7 @@ class KinSolve:
         self.instant_center = ic
         self.contactpatch_yz = cp_yz
         self.scrub_radius = sr
+        self.moving_points = moving_points
 
     def plot(self,
              suspension: bool = True,

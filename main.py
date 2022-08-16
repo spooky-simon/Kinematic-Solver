@@ -14,18 +14,19 @@ def main():
     # In form of Point([x,y,z])
     # Wheel_Center
     # Y point of wc should be track width / 2
-    wc = Point([0, 1245/2, 203])
+    # Wheel_Center
+    wc = Point([0,	622.5,	203])
     # Lower Wishbone
-    lfi = Point([175.1, 175, 111.45])  # Lower_Fore_Inner
-    lai = Point([-175.1, 175, 111.45])  # Lower_Aft_Inner
-    lo = Point([18.15, 610, 114.8])  # Lower_Upright_Point
+    lfi = Point([175.1,	    175,	111]) # Lower_Fore_Inner
+    lai = Point([-175.1,	175,	111]) # Lower_Aft_Inner
+    lo  = Point([-3.1,	    608,	114]) # Lower_Upright_Point
     # Upper Wishbone
-    ufi = Point([120.1, 240, 223])  # Upper_Fore_Inner
-    uai = Point([-120.1, 240, 215.8])  # Upper_Aft_Inner
-    uo = Point([5.25, 600.5, 298.3])  # Upper_Upright_Point
+    ufi = Point([120.1,	    240,	223]) # Upper_Fore_Inner
+    uai = Point([-120.1,	240,	216]) # Upper_Aft_Inner
+    uo  = Point([-7.1,	    595,	299]) # Upper_Upright_Point
     # Tie Rod or Steering Rod
-    tri = Point([55.1, 140, 163])  # Tie_Rod_Inner
-    tro = Point([55.1, 600, 163])  # Tie_Rod_Outer
+    tri = Point([55.1, 140, 163]) # Tie_Rod_Inner
+    tro = Point([55.1, 600, 163]) # Tie_Rod_Outer
     
     unit = "mm"  # used in graph axis labels, not used in code (yet...)
 
@@ -52,11 +53,6 @@ def main():
     camber = 0
     caster = 0
 
-    """ List the points of the suspension that will move """
-    # default of [uo, lo, tro, wc] should apply to most double wishbone setups
-    moving_pts = [uo, lo, tro, wc]
-    # steer_pts  = [tro, wc] # ignore for now, going to implement a steering solver
-
     """ Input the list of points that each moving point is linked to below. """
     # Each point listed in moving_points needs a list of friends.
     # The default in the code should apply to all standard SLA/double wishbone setups.
@@ -76,8 +72,6 @@ def main():
         full_jounce=full_jounce,
         full_rebound=full_rebound,
 
-        moving_points=moving_pts,
-
         unit=unit,
     )
 
@@ -90,7 +84,7 @@ def main():
     num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
-    happy = 10 ** -3
+    happy = 10 ** -5
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
     
@@ -105,11 +99,11 @@ def main():
 
     """ Plot """
     kin.plot(
-        suspension=False,  # Visualize the corner
+        suspension=True,  # Visualize the corner
         bump_steer=True,  # Bump Steer vs vertical travel
-        camber_gain=False,  # Camber Gain vs vertical travel
-        caster_gain=False,  # Caster gain plot
-        scrub_gain = False, # Scrub change plot
+        camber_gain=True,  # Camber Gain vs vertical travel
+        caster_gain=True,  # Caster gain plot
+        scrub_gain = True, # Scrub change plot
         roll_center_in_roll=False,  # Path of roll center as the car rolls
         bump_steer_in_deg=False,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=True,  # Sets y-axis of camber gain plot to roll angle in deg
