@@ -20,6 +20,7 @@
 * run strutmain.py and then send me what errors you get
 
 ## Known bugs
+* Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
 * ~~weird stuff can be seen in the caster/camber/toe graphs when you set num_steps to anything between 25 and 100.~~
   * ~~I dont know why this happens, and i probably won't fix it. just set it to a bigger or smaller value and it goes away~~
   * fixed with better grad descent algo

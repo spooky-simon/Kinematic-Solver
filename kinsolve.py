@@ -1,19 +1,25 @@
+# Import Libraries
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['axes.titlesize'] = 14
+plt.rcParams['axes.titlesize'] = 14 # just to make titles more biggerer
 import time
 from numpy.linalg import norm
-from numpy import dot
+from numpy import dot, sin, cos
 from typing import Tuple, List
 from dataclasses import dataclass
 import matplotlib.collections as mcoll
 import sys
 
-
+# The point class is the sauce this code is swimming in
+# 
 class Point:
     def __init__(self, coords):
         """
         The potatoes of the meat and potates of the code
+        
+        A "Point" is used to keep track of the location history for all moving points
+        as well as what points it is linked to which I call its "friends"
+        and how far it needs to be from its friends to be "happy"
         """
         self.coords = np.array(coords)  # to track coordinates of the point
         self.links = {}  # a dictionary used to link points to each other
@@ -221,21 +227,40 @@ class KinSolve:
                 sys.exit("Trying to move a point with no friends")
         
         print("Solving for Jounce Kinematics...")
+        # This is the good stuff
+        # This is the "meat" of the meat and potatoes of the code
+        # I'm straight up not explaining gradient decsent in code comments
+        # but it loops through each step and solves the whole shibang muy bueno
+        
+        # Step 0: Initialize the clock for timing,
+        # the err list for error tracking which I dont have turned on in this code, but if you graph it, its very cool,
+        # and the initial vector that is starting the next grad descent problem
         t0 = time.time_ns()
         err = []
         v_move = [0, 0, self.full_jounce / steps]
-        # This is the good stuff
-        # I'm straight up not explaining gradient decsent in code comments
-        # but it loops through each step and solves the whole shibang muy bueno
+        
+        # As much as I hate for loops, this has to be done sequentially, as subsequent steps
+        # rely on the previous step for its initial condition
+        # this isnt that slow because.. i dont know how computers work so idk
         for i in range(0, steps):
             
+            # Step 1: Loop through all movable points and append the current
+            #         location to the points' respective jounce history
             for pt in moving_points:
                 pt.jhist.append(pt.coords)
                 pt.coords = pt.coords + v_move
+            
+            # Step 2: Initialize the error value at a value higher that "happy"
+            # 1 was chosen because I have a simple mind
             error = 1
-            err.append([])
-            while error > happy:
-                # link_vectors = [a.coords-b.coords for [a,b] in linked_pairs]
+            err.append([error])
+            
+            # Step 3: while loop that contains the grad descent work for each step
+            # The while loop does grad descent steps until the error value is low enough
+            # The grad descent basically adjusts each movable point until the link lengths are close enough to the original link lengths to call it good
+            # If all the link lengths are very very close to the static link lengths, you have found a feasible suspension articulation
+            # This whole script relies on the fact that this grad descent algo will just find the closest local miminum and chill
+            while error > happy:               
                 link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
                 ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
                 obj_func = [(i**2)*0.5 for i in ass_func]
@@ -245,14 +270,26 @@ class KinSolve:
                 for pair,step_ in zip(linked_pairs,step):
                     pair[0].coords = pair[0].coords - step_
                 err[i].append(error)
-            # v_move[1] = wc.coords[1] - wc.jhist[-1][1]
+            
+            # Step 4: Once the suspension has moved, we can update the dither vector to follow the arc traced out by the wheel center
+            # This enables us to start each grad descent problem closer to a local minimum speeding up the whole thing mega fast
+            # We dither each point by the amount the wheel center moved despite them not moving the same
+            # This is one of those "good enough" things. I didn't want to bother dithering each point by a different vector
+            # keeping track of more than one vector and trying to match it seemed like more effort than it was worth
             v_move[1] = self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1]
+            
+            # Repeat Steps 1-4 for all points requested
+        
+        # Step 5: append the final points' locations to their jounce histories
         for pt in moving_points:
             pt.jhist.append(pt.coords)
+        
+        # Stop the clock and report time
         t1 = time.time_ns()
         print("Solved Jounce in", (t1 - t0) / 10 ** 6, "ms")
 
         # Reset to do rebound
+        # All comments in Jounce apply here for Rebound
         for pt in moving_points:
             pt.coords = pt.origin
         err = []
@@ -285,36 +322,36 @@ class KinSolve:
         # Combine Jounce and Rebound into a single list
         for pt in moving_points:
             pt.jr_combine()
-
+        
+        # Now we have all of our suspension kinematics
+        # We can use these to do math and figure out kinematic behavior
         print("Calculating kinematic changes over wheel travel:")
+        
+        # Bump steer is first up
         print("* Bump Steer")
-        # Projecting the steeing arm into the XY plane and measuring the angle
+        # Calculate the 'gemoetric steering arm' by finding the vector from tie rod pickup point to king pin
+        # Projecting the steeing arm into the XY plane
+        # Measuring the angle change from the static position
         sa = [pt_to_ln(tro, uo, lo) for tro, uo, lo in
               zip(self.tie_rod[1].hist, self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
         sa_xy = [[x, y] for x, y, z in sa]  # project into xy plane (top view)
         bmp_str = [angle(v, [1, 0]) for v in sa_xy]  # angle bw v1 and x axis
-        bmp_str = [i - bmp_str[steps] + offset_toe for i in bmp_str]
+        bmp_str = [i - bmp_str[steps] + offset_toe for i in bmp_str] # campare to static
 
         print("* Camber Gain")
         # Projects the kingpin into the YZ plane to meaure camber
         # by measuring the angle between the kingpin and the Z axis
         kp = [a - b for a, b in zip(self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
         kp_yz = [[y, z] for x, y, z in kp]  # project into YZ plane (front view)
-        cbr_gn = [angle([0, 1], v) for v in kp_yz]  # compare to z axis
+        cbr_gn = [angle([0, 1], v) for v in kp_yz]  # angle between kp and z-axis in 2d
         cbr_gn = [i - cbr_gn[steps] + offset_camber for i in cbr_gn]  # compares to static
 
         print("* Caster changes")
         # Projects the kingpin into the YZ plane to meaure caster
         # by measuring the angle between the kingpin and the Z axis
         kp_xz = [[x, z] for x, y, z in kp]  # project into XZ plane (side view)
-        cstr_gn = [-angle([0, 1], v) for v in kp_xz]  # compare to z axis
+        cstr_gn = [-angle([0, 1], v) for v in kp_xz]  # angle between kp and z-axis in 2d
         cstr_gn = [i - cstr_gn[steps] + offset_caster for i in cstr_gn]  # compares to static
-
-        # bump_zs is a list of the z height for each iterable in the code compared to static
-        # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
-
-        bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
-        roll_ang = [-np.degrees(np.sin(z / (2*self.wheel_center.origin[1]))) for z in bump_zs]
 
         print("* Roll center")
         # line intersecting functions taken from
@@ -338,8 +375,8 @@ class KinSolve:
         v_0 = [0,-self.wheel_center.origin[2]]
         # rotate method found here:
         # https://matthew-brett.github.io/teaching/rotation_2d.html
-        v_y = [np.cos(np.radians(a))*v_0[0] - np.sin(np.radians(a))*v_0[1] for a in cbr_gn]
-        v_z = [np.sin(np.radians(a))*v_0[0] + np.cos(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_y = [cos(np.radians(a))*v_0[0] - sin(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_z = [sin(np.radians(a))*v_0[0] + cos(np.radians(a))*v_0[1] for a in cbr_gn]
         v_yz = [[y,z] for y,z in zip(v_y,v_z)]
         cp_yz = [wc[1:] + v for wc,v in zip(self.wheel_center.hist,v_yz)]
         # Roll Center in Heave
@@ -363,6 +400,11 @@ class KinSolve:
         kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
         sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
         print(sr[-1])
+        
+        # bump_zs is a list of the z height for each iterable in the code compared to static
+        # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
+        bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        roll_ang = [-np.degrees(sin(z / (2*self.wheel_center.origin[1]))) for z in bump_zs]
 
         # Save calculated values
         self.sa = sa
