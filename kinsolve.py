@@ -321,24 +321,31 @@ class KinSolve:
         # https://web.archive.org/web/20111108065352/https://www.cs.mun.ca/%7Erod/2500/notes/numpy-arrays/numpy-arrays.html
         # I don't really get the whole thing but it works so I don't need to think about it
 
-        # Get using fore link for upper and lower wishbones
-        # Shouldn't change behavior significantly unless anti-dive characteristics are huge
+        # ui_mid finds average point of anti-squat/dive geometry
         # project to yz plane
-        upr = [self.upper_wishbone[0].coords[1:] for i in self.upper_wishbone[2].hist]
+        ui_mid = (self.upper_wishbone[0].coords+self.upper_wishbone[1].coords)/2
+        upr = [ui_mid[1:] for i in self.upper_wishbone[2].hist]
         lwr = [self.lower_wishbone[0].coords[1:] for i in self.lower_wishbone[2].hist]
         uo_yz = [i[1:] for i in self.upper_wishbone[2].hist]
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        cp_y = [y for x,y,z in self.wheel_center.hist]
-        cp_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        print(ic[-1])
+        # Find vector from wc to cp at static (kp_yz_0)
+        # rotate it by camber gain in yz plane
+        # this is now the contact patch
+        kp_yz_0 = [0,-self.wheel_center.origin[2]]
+        L = norm(kp_yz_0)
+        cp_approx = [wc[1:]+kp_yz_0 for wc in self.wheel_center.hist]
+        cp_y = [np.cos(np.radians(-a))*cp[0] - np.sin(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
+        cp_z = [np.sin(np.radians(-a))*cp[0] + np.cos(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
         cp_yz = [[y,z] for y,z in zip(cp_y,cp_z)]
-        # cp_yz = [np.array([self.wheel_center.coords[1] - self.wheel_center.origin[1], 0]) for i in
-        #          ic]  # front axle at the ground
+        
         # Roll Center in Heave
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
         opp_cp_yz = [np.array([-y, z]) for y, z in cp_yz]
+        
         # Roll Center in Roll
         opp_ic_r = opp_ic
         opp_ic_r.reverse()
