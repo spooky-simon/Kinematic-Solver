@@ -330,17 +330,20 @@ class KinSolve:
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        print(ic[-1])
         # Find vector from wc to cp at static (kp_yz_0)
         # rotate it by camber gain in yz plane
         # this is now the contact patch
         kp_yz_0 = [0,-self.wheel_center.origin[2]]
-        L = norm(kp_yz_0)
         cp_approx = [wc[1:]+kp_yz_0 for wc in self.wheel_center.hist]
+        print(cp_approx[-1][0])
         cp_y = [np.cos(np.radians(-a))*cp[0] - np.sin(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
+        print(cp_y[-1])
         cp_z = [np.sin(np.radians(-a))*cp[0] + np.cos(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
         cp_yz = [[y,z] for y,z in zip(cp_y,cp_z)]
-        
+        # print(cp_yz[1])
+        # print(norm(kp_yz_0))
+        # print(norm(self.wheel_center.hist[-1][1:]-cp_approx[-1]))
+        # print(norm(self.wheel_center.hist[-1][1:]-cp_yz[-1]))
         # Roll Center in Heave
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
