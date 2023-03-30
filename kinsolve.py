@@ -330,20 +330,18 @@ class KinSolve:
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        # Find vector from wc to cp at static (kp_yz_0)
+        # Find vector from wc to cp at static (v_0)
+        # this vector will orignate at the origin which makes rotation easy
         # rotate it by camber gain in yz plane
+        # move new vector back to the wc
         # this is now the contact patch
-        kp_yz_0 = [0,-self.wheel_center.origin[2]]
-        cp_approx = [wc[1:]+kp_yz_0 for wc in self.wheel_center.hist]
-        print(cp_approx[-1][0])
-        cp_y = [np.cos(np.radians(-a))*cp[0] - np.sin(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
-        print(cp_y[-1])
-        cp_z = [np.sin(np.radians(-a))*cp[0] + np.cos(np.radians(-a))*cp[1] for a,cp in zip(cbr_gn,cp_approx)]
-        cp_yz = [[y,z] for y,z in zip(cp_y,cp_z)]
-        # print(cp_yz[1])
-        # print(norm(kp_yz_0))
-        # print(norm(self.wheel_center.hist[-1][1:]-cp_approx[-1]))
-        # print(norm(self.wheel_center.hist[-1][1:]-cp_yz[-1]))
+        v_0 = [0,-self.wheel_center.origin[2]]
+        # rotate method found here:
+        # https://matthew-brett.github.io/teaching/rotation_2d.html
+        v_y = [np.cos(np.radians(a))*v_0[0] - np.sin(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_z = [np.sin(np.radians(a))*v_0[0] + np.cos(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_yz = [[y,z] for y,z in zip(v_y,v_z)]
+        cp_yz = [wc[1:] + v for wc,v in zip(self.wheel_center.hist,v_yz)]
         # Roll Center in Heave
         # opp variables are for opposite side
         opp_ic = [np.array([-y, z]) for y, z in ic]
@@ -364,6 +362,7 @@ class KinSolve:
         sr_pts = zip(uo_yz,lo_yz,cp_yz,opp_cp_yz)
         kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
         sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
+        print(sr[-1])
 
         # Save calculated values
         self.sa = sa
