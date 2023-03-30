@@ -302,6 +302,8 @@ class StrutSolve:
         kp_yz = [[y, z] for x, y, z in kp]  # project into YZ plane (front view)
         cbr_gn = [-angle([0, 1], v) for v in kp_yz]  # compare to z axis
         cbr_gn = [i - cbr_gn[steps] + offset_camber for i in cbr_gn]  # compares to static
+        print(self.wheel_center.hist[-1])
+        # print(cbr_gn)
 
         print("* Caster changes")
         # Projects the kingpin into the YZ plane to meaure caster
@@ -356,6 +358,7 @@ class StrutSolve:
         self.bump_steer = bmp_str
         self.roll_center = rcr
         self.instant_center = ic
+        self.offset_camber = offset_camber
 
     def plot(self,
              suspension: bool = True,
@@ -413,16 +416,37 @@ class StrutSolve:
             ax.plot(xs,ys,zs)
 
         if camber_gain:
-            print("Plotting Camber Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if camber_gain_in_deg:
-                ax.plot(self.camber_gain, self.roll_angle)
-                ax.set_ylabel('Vehicle Roll [deg]')
+                print("Plotting Camber Gain vs Vehicle Roll...")
+                # annotation
+                (x,y) = (self.roll_angle[-1], self.camber_gain[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < self.offset_camber else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
+                ax.plot(self.roll_angle, self.camber_gain, color = 'k')
+                # axis label
+                ax.set_xlabel('Vehicle Roll [deg]')
             else:
-                ax.plot(self.camber_gain, self.bump_zs)
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
-            ax.set_xlabel('Camber Change [deg]')
-            ax.set_title('Camber Gain')
+                print("Plotting Camber Gain vs Vertical Travel...")
+                ax.set_xlabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                ax.plot(self.bump_zs, self.camber_gain, color = 'k')
+                # annotation
+                (x,y) = (self.bump_zs[-1], self.camber_gain[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < self.offset_camber else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
+            ax.set_ylabel('Camber Change [deg]')
+            ax.set_title('Camber Gain', pad = 15)
 
         if bump_steer:
             print("Plotting Bump Steer vs Vertical Travel...")

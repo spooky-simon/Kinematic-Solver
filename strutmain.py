@@ -42,8 +42,8 @@ def main():
     # This includes linking the upper and lower upright points
     # as that length cannot be allowed to change
     wc.friends = [lo, tro, wco]
-    lo.friends = [lfi, lai, wc, tro]
-    tro.friends = [lo, wc, tri]
+    lo.friends = [lfi, lai, wc, tro, wco]
+    tro.friends = [lo, wc, tri, wco]
 
     kin = StrutSolve(
         wheel_center=wc,
@@ -66,17 +66,17 @@ def main():
     # I have found 10 to be a good middle ground
     # Weird stuff happens when you set it to anything between 25 and 50
     # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
-    num_steps = 10
+    num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
-    happy = 10 ** -3
+    happy = 10 ** -5
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
 
     # toe, camber and caster are used for static offsets on the graphs
     # these will not affect the solver
     toe = 0
-    camber = 2
+    camber = 0
     caster = 0
 
     kin.solve(
@@ -90,11 +90,11 @@ def main():
 
     """ Plot """
     kin.plot(
-        suspension=True,  # Visualize the corner
-        bump_steer=True,  # Bump Steer vs vertical travel
+        suspension=False,  # Visualize the corner
+        bump_steer=False,  # Bump Steer vs vertical travel
         camber_gain=True,  # Camber Gain vs vertical travel
-        caster_gain=True,  # Caster gain plot
-        roll_center_in_roll=True,  # Path of roll center as the car rolls
+        caster_gain=False,  # Caster gain plot
+        roll_center_in_roll=False,  # Path of roll center as the car rolls
         bump_steer_in_deg=True,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=False,  # Sets y-axis of camber gain plot to roll angle in deg
         caster_gain_in_deg=False  # Sets y-axis of caster gain plot to roll angle in deg
