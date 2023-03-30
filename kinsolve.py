@@ -313,8 +313,8 @@ class KinSolve:
         # bump_zs is a list of the z height for each iterable in the code compared to static
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
 
-        bump_zs = [xyz[2] - self.wheel_center.origin[2] for xyz in self.wheel_center.hist]
-        roll_ang = [-np.degrees(np.sin(x / self.wheel_center.origin[1])) for x in bump_zs]
+        bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        roll_ang = [-np.degrees(np.sin(z / (2*self.wheel_center.origin[1]))) for z in bump_zs]
 
         print("* Roll center")
         # line intersecting functions taken from
