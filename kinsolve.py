@@ -355,7 +355,9 @@ class KinSolve:
         rcr = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rcr_pts]
         
         print("* Scrub Radius changes")
-        # Intersects kingpin_yz with line [0,0], then gets norm to contact patch
+        # Intersects kingpin_yz with line [0,0]
+        # then gets norm from where the king pin intersects to contact patch
+        # ground line is found using contact patches found in roll calc
         sr_pts = zip(uo_yz,lo_yz,cp_yz,opp_cp_yz)
         kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
         sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
