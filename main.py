@@ -77,13 +77,12 @@ def main():
 
     """ Solver Parameters """
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
-    # num_steps = 5 is lightning fast, gives blocky curve
-    # I have found 10 to be a good middle ground
-    # Weird stuff happens when you set it to anything between 25 and 50
-    # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
+    # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
+    # and it will result in a comprehensible amount of data
     num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
-    # For some reason you get really ugly data with learning rate < 10^-4 not sure why
+    # learning rate scales the rate at which the algorithm descends the slope
+    # learning rate is not worth messing with, just leave it
     happy = 10 ** -5
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
