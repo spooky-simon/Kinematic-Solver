@@ -15,13 +15,13 @@ def main():
     # In form of Point([x,y,z])
     # Wheel_Center
     # Points
-    wc  = Point([0,31,10])
-    spi = Point([0,12,40]) # strut pickup inboard
-    lai = Point([-10,0,3]) # control arm pickup inboard
-    lfi = Point([10,0,3]) # control arm pickup outboard
-    lo  = Point([0,30,3]) # Lower outer
-    tri = Point([-5,-1,4]) # tie rod inboard
-    tro = Point([-5,30,4]) # tie rod outboard
+    wc  = Point([0,51,10])
+    spi = Point([0,32,40]) # strut pickup inboard
+    lai = Point([-10,20,3]) # control arm pickup inboard
+    lfi = Point([10,20,3]) # control arm pickup outboard
+    lo  = Point([1,50,3]) # Lower outer
+    tri = Point([-5,19,4]) # tie rod inboard
+    tro = Point([-5,50,4]) # tie rod outboard
     wco = Point([0,0,0]) # offset point that will get filled in automatically, ignore
 
     """ Suspension Setup """
@@ -66,10 +66,10 @@ def main():
     # I have found 10 to be a good middle ground
     # Weird stuff happens when you set it to anything between 25 and 50
     # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
-    num_steps = 100
+    num_steps = 1000
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
-    happy = 10 ** -5
+    happy = 10 ** -4
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
 
@@ -92,9 +92,9 @@ def main():
     kin.plot(
         suspension=False,  # Visualize the corner
         bump_steer=False,  # Bump Steer vs vertical travel
-        camber_gain=True,  # Camber Gain vs vertical travel
+        camber_gain=False,  # Camber Gain vs vertical travel
         caster_gain=False,  # Caster gain plot
-        roll_center_in_roll=False,  # Path of roll center as the car rolls
+        roll_center_in_roll=True,  # Path of roll center as the car rolls
         bump_steer_in_deg=True,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=False,  # Sets y-axis of camber gain plot to roll angle in deg
         caster_gain_in_deg=False  # Sets y-axis of caster gain plot to roll angle in deg

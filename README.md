@@ -15,6 +15,7 @@
 * open main.py and input your parameters
 * run main.py and enjoy:)
 #### MacPherson Strut
+* UNDER CONSTRUCTION: THIS ONE IS NOT FINISHED
 * just download strutsolve.py and strutmain.py into the same folder
 * open strutmain.py and input your parameters
 * run strutmain.py and then send me what errors you get

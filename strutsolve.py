@@ -291,6 +291,8 @@ class StrutSolve:
         # Projecting the steeing arm into the XY plane and measuring the angle
         sa = [pt_to_ln(tro, self.strut_mount.coords, lo) for tro, lo in
               zip(self.tie_rod[1].hist, self.lower_wishbone[2].hist)]
+        # sa_xy = [[x, y] for x, y, z in sa]  # project into xy plane (top view)
+        # sa = [[x1y1[0]-x2y2[0],x1y1[1]-x2y2[1]] for x1y1,x2y2 in zip(self.wheel_center_offset.hist,self.tie_rod[1].hist)]
         sa_xy = [[x, y] for x, y, z in sa]  # project into xy plane (top view)
         bmp_str = [-angle(v, [1, 0]) for v in sa_xy]  # angle bw v1 and x axis
         bmp_str = [i - bmp_str[steps] + offset_toe for i in bmp_str]
@@ -302,7 +304,6 @@ class StrutSolve:
         kp_yz = [[y, z] for x, y, z in kp]  # project into YZ plane (front view)
         cbr_gn = [-angle([0, 1], v) for v in kp_yz]  # compare to z axis
         cbr_gn = [i - cbr_gn[steps] + offset_camber for i in cbr_gn]  # compares to static
-        print(self.wheel_center.hist[-1])
         # print(cbr_gn)
 
         print("* Caster changes")
@@ -448,29 +449,69 @@ class StrutSolve:
             ax.set_ylabel('Camber Change [deg]')
             ax.set_title('Camber Gain', pad = 15)
 
-        if bump_steer:
-            print("Plotting Bump Steer vs Vertical Travel...")
+        if bump_steer:     
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if bump_steer_in_deg:
-                ax.plot(self.bump_steer, self.roll_angle)
+                print("Plotting Bump Steer vs Vehicle Roll...")
                 ax.set_xlabel('Vehicle Roll [deg]')
+                ax.plot(self.roll_angle, self.bump_steer, color = 'k')
+                # annotation
+                (x,y) = (self.roll_angle[-1], self.bump_steer[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < 0 else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
             else:
-                ax.plot(self.bump_steer, self.bump_zs)
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
-            ax.set_xlabel('Toe Change [deg]')
-            ax.set_title('Bump Steer')
+                print("Plotting Bump Steer vs Vertical Travel...")
+                ax.plot(self.bump_zs, self.bump_steer, color = 'k')
+                ax.set_xlabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                # annotation
+                (x,y) = (self.bump_zs[-1], self.bump_steer[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < 0 else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
+            ax.set_ylabel('Toe [deg]\n<- toe in     toe out->', multialignment='center')
+            ax.set_title('Bump Steer', pad = 15)
 
         if caster_gain:
-            print("Plotting Caster Gain vs Vertical Travel...")
             fig, ax = plt.subplots()
+            ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if caster_gain_in_deg:
-                ax.plot(self.caster_gain, self.roll_angle)
+                print("Plotting Caster Gain vs Vehicle Roll...")
+                ax.plot(self.roll_angle, self.caster_gain, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
+                # annotation
+                (x,y) = (self.roll_angle[-1], self.caster_gain[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < 0 else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
             else:
-                ax.plot(self.caster_gain, self.bump_zs)
-            ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
-            ax.set_xlabel('Caster Change [deg]')
-            ax.set_title('Caster Gain')
+                print("Plotting Caster Gain vs Vertical Travel...")
+                ax.plot(self.bump_zs, self.caster_gain, color = 'k')
+                ax.set_xlabel('Vertical Wheel Center Travel [' + self.unit + ']')
+                # annotation
+                (x,y) = (self.bump_zs[-1], self.caster_gain[-1])
+                s = '('+str(round(x,2))+', '+str(round(y,2))+')'
+                ann_y = 50 if y < 0 else -50
+                ax.annotate(s, xy = (x,y), xycoords = 'data',
+                            xytext = (10,ann_y), textcoords = 'offset points',
+                            horizontalalignment='right',
+                            arrowprops=dict(arrowstyle="->",
+                    connectionstyle="angle3,angleA=0,angleB=-90"))
+            ax.set_ylabel('Caster Change [deg]')
+            ax.set_title('Caster Gain', pad = 15)
 
         if roll_center_in_roll:
             print("Plotting Path of Roll Center as Car Rolls...")
