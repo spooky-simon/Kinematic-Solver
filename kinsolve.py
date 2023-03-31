@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['axes.titlesize'] = 14 # just to make titles more biggerer
 import time
 from numpy.linalg import norm
-from numpy import dot, sin, cos
+from numpy import dot, sin, cos, cross, sign
 from typing import Tuple, List
 from dataclasses import dataclass
 import matplotlib.collections as mcoll
@@ -389,8 +389,30 @@ class KinSolve:
         opp_ic_r.reverse()
         opp_cp_yz.reverse()
         # rcr is roll center in roll
-        rcr_pts = zip(cp_yz, ic, opp_cp_yz, opp_ic)
-        rcr = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rcr_pts]
+        # Global Coordinates, not in rolled coordinates
+        rc_pts = zip(cp_yz, ic, opp_cp_yz, opp_ic)
+        rc = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in rc_pts]
+        # This will give us roll center in global coordinates, not relative to the new ground plane the car is on after it rolled
+        # the new 0,0,0 will be the mid point of the line between the two contact points
+        gnd_pln_mid_pt_v = [(a-b)/2 for a,b in zip(cp_yz,opp_cp_yz)]
+        gnd_pln_mid_pt = [pt-v for pt,v in zip(cp_yz,gnd_pln_mid_pt_v)]  # off by 0.05mm when checked against solidworks
+        # To find distances to this point
+        # Can just find the magnitude of the perp vector for Z
+        # then find the distance between the projected pt and the mid pt
+        rc_pt_to_ln = [pt_to_ln(pt,cp,opp_cp) for pt,cp,opp_cp in zip(rc,cp_yz,opp_cp_yz)]
+        rcr_z = [norm(v) for v in rc_pt_to_ln] # off by 0.06mm when checked in solidworks
+        rc_projected = [rc+v for rc,v in zip(rc,rc_pt_to_ln)]
+        rcr_y = [norm(rc_proj-mid_pt) for rc_proj,mid_pt in zip(rc_projected,gnd_pln_mid_pt)]
+        # this now gives only positive values
+        # creating indexes to see what is positive and what is negative
+        # Use cross product to find angle
+        z_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rc,cp_yz,opp_cp_yz)]
+        # Need a midpoint vertical line to say left or right
+        # We already have the mid point, only need another point perpendicular
+        # Luckily we have a perp v to gnd
+        c = [pt + v for pt,v in zip(gnd_pln_mid_pt,rc_pt_to_ln)]
+        y_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rc,gnd_pln_mid_pt,c)]
+        rcr = [[y*y_ind,z*z_ind] for y,z,y_ind,z_ind in zip(rcr_y,rcr_z,y_ind,z_ind)]
         
         print("* Scrub Radius changes")
         # Intersects kingpin_yz with line [0,0]
@@ -399,12 +421,11 @@ class KinSolve:
         sr_pts = zip(uo_yz,lo_yz,cp_yz,opp_cp_yz)
         kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
         sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
-        print(sr[-1])
         
         # bump_zs is a list of the z height for each iterable in the code compared to static
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
         bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
-        roll_ang = [-np.degrees(sin(z / (2*self.wheel_center.origin[1]))) for z in bump_zs]
+        roll_ang = [-np.degrees(sin(z / (self.wheel_center.origin[1]))) for z in bump_zs]
 
         # Save calculated values
         self.sa = sa

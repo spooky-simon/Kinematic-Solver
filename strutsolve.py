@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time
 from numpy.linalg import norm
-from numpy import dot
+from numpy import dot, sin, cos, sign, cross
 from typing import Tuple, List
 from dataclasses import dataclass
 import sys
@@ -324,31 +324,70 @@ class StrutSolve:
         # https://web.archive.org/web/20111108065352/https://www.cs.mun.ca/%7Erod/2500/notes/numpy-arrays/numpy-arrays.html
         # I don't really get the whole thing but it works so I don't need to think about it
 
-        # Get using fore link for upper and lower wishbones
-        # Shouldn't change behavior significantly unless anti-dive characteristics are huge
+        # lwr_mid finds average point of anti-squat/dive geometry
         # project to yz plane
-        lwr = [self.lower_wishbone[0].coords[1:] for i in self.lower_wishbone[2].hist]
+        # project to yz plane
+        lwr_mid = (self.lower_wishbone[0].coords+self.lower_wishbone[1].coords)/2
+        lwr = [lwr_mid[1:] for i in self.lower_wishbone[2].hist]
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
+        # print(self.wheel_center.hist[-1][2]-self.wheel_center.origin[2])
+        # print(self.wheel_center.hist[-1][1:])
+        # print(lwr[-1])
+        # print(lo_yz[-1])
         
         strut_yz = [self.strut_mount.coords[1:] for i in self.lower_wishbone[2].hist]
         
-        strut = [a-b for a,b in zip(strut_yz,lwr)]
+        strut = [a-b for a,b in zip(strut_yz,lo_yz)]
         strut_perp = [perp(v) for v in strut]
-        a2 = [a+b for a,b in zip(strut_perp,strut_yz)]
-        ic_pts = zip(lwr, lo_yz, strut_yz, a2)
+        b2 = [a+b for a,b in zip(strut_perp,strut_yz)]
+        ic_pts = zip(lwr, lo_yz, strut_yz, b2)
         
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
-        
         op_ic = [np.array([-y,z]) for y,z in ic]
-        fa_y = [y for x,y,z in self.wheel_center.hist]
-        fa_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
-        fa_gd = [[y,z] for y,z in zip(fa_y,fa_z)]
-        op_fa_gd = [np.array([-y,z]) for y,z in fa_gd]
+        
+        # Find vector from wc to cp at static (v_0)
+        # this vector will orignate at the origin which makes rotation easy
+        # rotate it by camber gain in yz plane
+        # move new vector back to the wc
+        # this is now the contact patch
+        v_0 = [0,-self.wheel_center.origin[2]]
+        # rotate method found here:
+        # https://matthew-brett.github.io/teaching/rotation_2d.html
+        v_y = [cos(np.radians(a))*v_0[0] - sin(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_z = [sin(np.radians(a))*v_0[0] + cos(np.radians(a))*v_0[1] for a in cbr_gn]
+        v_yz = [[y,z] for y,z in zip(v_y,v_z)]
+        cp_yz = [wc[1:] + v for wc,v in zip(self.wheel_center.hist,v_yz)]
+        # print(ic[-1])
+        # fa_y = [y for x,y,z in self.wheel_center.hist]
+        # fa_z = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        # fa_gd = [[y,z] for y,z in zip(fa_y,fa_z)]
+        op_cp_yz = [np.array([-y,z]) for y,z in cp_yz]
         # Roll Center in Roll
         op_ic.reverse()
-        op_fa_gd.reverse()
-        rcr_pts = zip(fa_gd,ic,op_fa_gd,op_ic)
+        op_cp_yz.reverse()
+        rcr_pts = zip(cp_yz,ic,op_cp_yz,op_ic)
         rcr = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in rcr_pts]
+        
+        gnd_pln_mid_pt_v = [(a-b)/2 for a,b in zip(cp_yz,op_cp_yz)]
+        gnd_pln_mid_pt = [pt-v for pt,v in zip(cp_yz,gnd_pln_mid_pt_v)]  # off by 0.05mm when checked against solidworks
+        # To find distances to this point
+        # Can just find the magnitude of the perp vector for Z
+        # then find the distance between the projected pt and the mid pt
+        rc_pt_to_ln = [pt_to_ln(pt,cp,opp_cp) for pt,cp,opp_cp in zip(rcr,cp_yz,op_cp_yz)]
+        rcr_z = [norm(v) for v in rc_pt_to_ln] # off by 0.06mm when checked in solidworks
+        rc_projected = [rc+v for rc,v in zip(rcr,rc_pt_to_ln)]
+        rcr_y = [norm(rc_proj-mid_pt) for rc_proj,mid_pt in zip(rc_projected,gnd_pln_mid_pt)]
+        # this now gives only positive values
+        # creating indexes to see what is positive and what is negative
+        # Use cross product to find angle
+        z_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rcr,cp_yz,op_cp_yz)]
+        # Need a midpoint vertical line to say left or right
+        # We already have the mid point, only need another point perpendicular
+        # Luckily we have a perp v to gnd
+        c = [pt + v for pt,v in zip(gnd_pln_mid_pt,rc_pt_to_ln)]
+        y_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rcr,gnd_pln_mid_pt,c)]
+        rcr = [[y*y_ind,z*z_ind] for y,z,y_ind,z_ind in zip(rcr_y,rcr_z,y_ind,z_ind)]
+        print(rcr[-1])
 
         # Save calculated values
         self.sa = sa

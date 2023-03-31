@@ -15,7 +15,7 @@ def main():
     # In form of Point([x,y,z])
     # Wheel_Center
     # Points
-    wc  = Point([0,51,10])
+    wc  = Point([0,51,18])
     spi = Point([0,32,40]) # strut pickup inboard
     lai = Point([-10,20,3]) # control arm pickup inboard
     lfi = Point([10,20,3]) # control arm pickup outboard
@@ -66,10 +66,10 @@ def main():
     # I have found 10 to be a good middle ground
     # Weird stuff happens when you set it to anything between 25 and 50
     # num steps = 100-1000 gives nice smooth lines, but takes like half a second longer
-    num_steps = 1000
+    num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # For some reason you get really ugly data with learning rate < 10^-4 not sure why
-    happy = 10 ** -4
+    happy = 10 ** -5
     learning_rate = 10 ** -3
     # I did not implement a dynamic learning rate because im lazy and this works
 
