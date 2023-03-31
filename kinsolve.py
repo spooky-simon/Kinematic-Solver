@@ -10,8 +10,6 @@ from dataclasses import dataclass
 import matplotlib.collections as mcoll
 import sys
 
-# The point class is the sauce this code is swimming in
-# 
 class Point:
     def __init__(self, coords):
         """
@@ -61,7 +59,7 @@ def pt_to_ln(pt, a, b):
     """
     Shortest vector between a point and a line defined by points 'a' and 'b'
     This vector is also perpendicular to the line ab
-    Used in this code to determine geometric steering arm
+    Used in this code to determine geometric steering arm and in roll center calcs
 
     :param pt: A point
     :param a: A point that defines line ab, also used as the arbitrary point on the line in this algorithm
@@ -605,7 +603,7 @@ class KinSolve:
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
             ys = [y for [y,z] in self.roll_center]
-            zs = [yz[1] for yz in self.roll_center]
+            zs = [z for [y,z] in self.roll_center]
             norm = plt.Normalize(min(self.roll_angle), max(self.roll_angle))
             ax.scatter(ys, zs, c = self.roll_angle, cmap = cmap, norm = norm)
             points = np.array([ys, zs]).T.reshape(-1, 1, 2)
