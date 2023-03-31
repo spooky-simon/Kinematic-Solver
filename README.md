@@ -7,7 +7,6 @@
 * See Naming_Convention for double wishbone points naming convention used in this script
 * code should be somewhat commented... grad descent algorithm partially stolen from wikipedia
 * approach taken from Spinning Thumbs on yt
-* working on a link force solver, check back soon
 
 ## How to use
 #### Double Wishbone
@@ -15,10 +14,15 @@
 * open main.py and input your parameters
 * run main.py and enjoy:)
 #### MacPherson Strut
-* UNDER CONSTRUCTION: THIS ONE IS NOT FINISHED
 * just download strutsolve.py and strutmain.py into the same folder
 * open strutmain.py and input your parameters
 * run strutmain.py and then send me what errors you get
+* Slower and less accurate due to eariler version of the grad descent algo.
+	* Probably gonna stay that way because it's good enough
+
+## Future additions
+* working on a link force solver, check back... at some point in the future
+* rocker geometry and dynamic motion ratios should be coming
 
 ## Known bugs
 * Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
