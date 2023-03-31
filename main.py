@@ -43,7 +43,7 @@ def main():
     # the code will not throw an error but will either not finish solving or give erroneous results
     full_jounce = 25.4
     full_rebound = -25.4
-    # Suspension Parameters for Steering Solver
+    # Suspension Parameters for Steering Solver (coming eventually)
     rack_travel = 25 # travel of the steering rack (or analagous if rack not used)
     wb = 1535        # wheel base
     tw = 1245        # track width
@@ -79,7 +79,7 @@ def main():
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
     # and it will result in a comprehensible amount of data
-    num_steps = 10000
+    num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # learning rate scales the rate at which the algorithm descends the slope
     # learning rate is not worth messing with, just leave it
@@ -101,9 +101,9 @@ def main():
         suspension=False,  # Visualize the corner
         bump_steer=False,  # Bump Steer vs vertical travel
         camber_gain=False,  # Camber Gain vs vertical travel
-        caster_gain=True,  # Caster gain plot
+        caster_gain=False,  # Caster gain plot
         scrub_gain = False, # Scrub change plot
-        roll_center_in_roll=False,  # Path of roll center as the car rolls
+        roll_center_in_roll=True,  # Path of roll center as the car rolls
         bump_steer_in_deg=False,  # Sets y-axis of bump steer plot to roll angle in deg
         camber_gain_in_deg=True,  # Sets y-axis of camber gain plot to roll angle in deg
         caster_gain_in_deg=False,  # Sets y-axis of caster gain plot to roll angle in deg

@@ -387,7 +387,6 @@ class StrutSolve:
         c = [pt + v for pt,v in zip(gnd_pln_mid_pt,rc_pt_to_ln)]
         y_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rcr,gnd_pln_mid_pt,c)]
         rcr = [[y*y_ind,z*z_ind] for y,z,y_ind,z_ind in zip(rcr_y,rcr_z,y_ind,z_ind)]
-        print(rcr[-1])
 
         # Save calculated values
         self.sa = sa

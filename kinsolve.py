@@ -41,52 +41,6 @@ class Point:
     def __repr__(self) -> str:
         return self.coords.__str__()
 
-    # def Ass_Fcn(self):
-    #     """
-    #     Associative Function
-        
-    #     This describes how much longer each link is than it should be
-
-    #     :return: Gx
-    #     """
-    #     Gx = []
-    #     for friend in self.friends:
-    #         v = self.coords - friend.coords  # link vector
-    #         v_norm = norm(v)  # link length
-    #         l = self.links[friend]  # link target
-    #         Gx.append(v_norm - l)
-    #     return Gx
-
-    # def Obj_Fcn(self):
-    #     """
-    #     Objective Function (cost fcn)
-        
-    #     Lower is better
-
-    #     :return: Cost
-    #     """
-    #     Fx = []
-    #     for friend in self.friends:
-    #         v = self.coords - friend.coords  # link vector
-    #         v_norm = norm(v)  # link length
-    #         l = self.links[friend]  # link target
-    #         Fx.append(v_norm - l)
-    #     Fx = [(i ** 2) / 2 for i in Fx]
-    #     return Fx
-
-    # def Jacobian(self):
-    #     """
-    #     Jacobian of Objective Function
-
-    #     :return: Jacobian
-    #     """
-    #     Jcb = []
-    #     for friend in self.friends:
-    #         df = 2 * (self.coords - friend.coords)
-    #         Jcb.append(df)
-    #     return np.array(Jcb)
-
-
 def angle(v1: List[float], v2: List[float]):
     """
     Angle between two vectors
@@ -271,9 +225,9 @@ class KinSolve:
                     pair[0].coords = pair[0].coords - step_
                 err[i].append(error)
             
-            # Step 4: Once the suspension has moved, we can update the dither vector to follow the arc traced out by the wheel center
+            # Step 4: Once the suspension has moved, we can update the move vector to follow the arc traced out by the wheel center
             # This enables us to start each grad descent problem closer to a local minimum speeding up the whole thing mega fast
-            # We dither each point by the amount the wheel center moved despite them not moving the same
+            # We move each point by the amount the wheel center moved despite them not moving the same
             # This is one of those "good enough" things. I didn't want to bother dithering each point by a different vector
             # keeping track of more than one vector and trying to match it seemed like more effort than it was worth
             v_move[1] = self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1]
@@ -650,7 +604,7 @@ class KinSolve:
             cmap = plt.cm.get_cmap('turbo')
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
-            ys = [yz[0] for yz in self.roll_center]
+            ys = [y for [y,z] in self.roll_center]
             zs = [yz[1] for yz in self.roll_center]
             norm = plt.Normalize(min(self.roll_angle), max(self.roll_angle))
             ax.scatter(ys, zs, c = self.roll_angle, cmap = cmap, norm = norm)
