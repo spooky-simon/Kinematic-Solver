@@ -160,7 +160,6 @@ class KinSolve:
         linked_pairs = []
         for pt in moving_points:
             for friend in pt.friends:
-                # link = norm(np.array(pt.coords - friend.coords))
                 if [friend,pt] not in linked_pairs:
                     linked_pairs.append([pt,friend])
         link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
