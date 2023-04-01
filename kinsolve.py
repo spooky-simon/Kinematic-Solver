@@ -20,7 +20,6 @@ class Point:
         and how far it needs to be from its friends to be "happy"
         """
         self.coords = np.array(coords)  # to track coordinates of the point
-        self.links = {}  # a dictionary used to link points to each other
         self.jhist = []  # jounce history
         self.rhist = []  # rebound history
         self.hist = []  # total travel history
@@ -70,7 +69,7 @@ def pt_to_ln(pt, a, b):
     # that goes from a to b
     # The vector that is returned is point to line or ptl
     ln_ab = [a - b for a, b in zip(a, b)]
-    ln_ap = [a - b for a, b in zip(a, pt)]
+    ln_ap = [a - p for a, p in zip(a, pt)]
     ab_u = ln_ab / norm(ln_ab)
     ptl = ln_ap - dot(ln_ap, ab_u) * ab_u
     return ptl
@@ -158,14 +157,10 @@ class KinSolve:
 
         """ Gradient Descent """
         # Derive link lengths for use in Grad Descent
-        for pt in moving_points:
-            for friend in pt.friends:
-                link = norm(np.array(pt.coords - friend.coords))
-                pt.links.update({friend: link})
         linked_pairs = []
-        
         for pt in moving_points:
             for friend in pt.friends:
+                # link = norm(np.array(pt.coords - friend.coords))
                 if [friend,pt] not in linked_pairs:
                     linked_pairs.append([pt,friend])
         link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
@@ -495,9 +490,10 @@ class KinSolve:
                 (x,y) = (self.roll_angle[-1], self.camber_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
                 ann_y = 50 if y < 0 else -50
+                x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
-                            xytext = (10,ann_y), textcoords = 'offset points',
-                            horizontalalignment='right',
+                            xytext = (0,ann_y), textcoords = 'offset points',
+                            horizontalalignment=x_align,
                             arrowprops=dict(arrowstyle="->",
                     connectionstyle="angle3,angleA=0,angleB=-90"))
                 ax.plot(self.roll_angle, self.camber_gain, color = 'k')
@@ -511,9 +507,10 @@ class KinSolve:
                 (x,y) = (self.bump_zs[-1], self.camber_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
                 ann_y = 50 if y < 0 else -50
+                x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
-                            xytext = (10,ann_y), textcoords = 'offset points',
-                            horizontalalignment='right',
+                            xytext = (0,ann_y), textcoords = 'offset points',
+                            horizontalalignment=x_align,
                             arrowprops=dict(arrowstyle="->",
                     connectionstyle="angle3,angleA=0,angleB=-90"))
             ax.set_ylabel('Camber Change [deg]')
@@ -530,9 +527,10 @@ class KinSolve:
                 (x,y) = (self.roll_angle[-1], self.bump_steer[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
                 ann_y = 50 if y < 0 else -50
+                x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
-                            xytext = (10,ann_y), textcoords = 'offset points',
-                            horizontalalignment='right',
+                            xytext = (0,ann_y), textcoords = 'offset points',
+                            horizontalalignment=x_align,
                             arrowprops=dict(arrowstyle="->",
                     connectionstyle="angle3,angleA=0,angleB=-90"))
             else:
