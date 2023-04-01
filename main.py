@@ -76,7 +76,7 @@ def main():
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
     # and it will result in a comprehensible amount of data
-    num_steps = 10
+    num_steps = 100
     # happy is the error margin for the gradient descent to be considered complete
     # learning rate scales the rate at which the algorithm descends the slope
     # learning rate is not worth messing with, just leave it

@@ -162,7 +162,9 @@ class KinSolve:
             for friend in pt.friends:
                 if [friend,pt] not in linked_pairs:
                     linked_pairs.append([pt,friend])
-        link_lens = (norm(a.origin-b.origin) for [a,b] in linked_pairs)
+        link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
+        # link_lens = (norm(a.origin-b.origin) for [a,b] in linked_pairs)
+        # print([i for i in link_lens])
                 
         # Error Checking
         for pt in moving_points:
@@ -207,7 +209,7 @@ class KinSolve:
             # If all the link lengths are very very close to the static link lengths, you have found a feasible suspension articulation
             # This whole script relies on the fact that this grad descent algo will just find the closest local miminum and chill
             while error > happy:               
-                link_lens2 = (norm(a.coords-b.coords) for [a,b] in linked_pairs)
+                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
                 ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
                 obj_func = [(i**2)*0.5 for i in ass_func]
                 jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
