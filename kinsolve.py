@@ -162,7 +162,7 @@ class KinSolve:
             for friend in pt.friends:
                 if [friend,pt] not in linked_pairs:
                     linked_pairs.append([pt,friend])
-        link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
+        link_lens = (norm(a.origin-b.origin) for [a,b] in linked_pairs)
                 
         # Error Checking
         for pt in moving_points:
