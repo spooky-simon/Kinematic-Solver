@@ -77,7 +77,8 @@ def pt_to_ln(pt, a, b):
 
 def perp(a):
     """
-    Creates a perpendicular line segement of a 2-vector
+    Creates a perpendicular vector for a given 2-vector
+    Uses rule (y,-x) _|_ (x,y)
 
     :param a: line, 2D vector
     :return: perpendicular vector
@@ -209,10 +210,10 @@ class KinSolve:
             # If all the link lengths are very very close to the static link lengths, you have found a feasible suspension articulation
             # This whole script relies on the fact that this grad descent algo will just find the closest local miminum and chill
             while error > happy:               
-                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
-                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
-                obj_func = [(i**2)*0.5 for i in ass_func]
-                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
+                link_lens2 = (norm(a.coords-b.coords) for [a,b] in linked_pairs)
+                ass_func = (a-b for a,b in zip(link_lens2,link_lens))
+                obj_func = ((i**2)*0.5 for i in ass_func)
+                jcbn = (2 * (a.coords - b.coords) for a,b in linked_pairs)
                 step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
                 error = sum(obj_func)
                 for pair,step_ in zip(linked_pairs,step):
@@ -252,10 +253,10 @@ class KinSolve:
             error = 1
             err.append([])
             while error > happy:
-                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
-                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
-                obj_func = [(i**2)*0.5 for i in ass_func]
-                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
+                link_lens2 = (norm(a.coords-b.coords) for [a,b] in linked_pairs)
+                ass_func = (a-b for a,b in zip(link_lens2,link_lens))
+                obj_func = ((i**2)*0.5 for i in ass_func)
+                jcbn = (2 * (a.coords - b.coords) for a,b in linked_pairs)
                 step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
                 error = sum(obj_func)
                 for pair,step_ in zip(linked_pairs,step):
