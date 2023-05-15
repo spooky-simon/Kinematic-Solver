@@ -1,6 +1,7 @@
 # Kinematic-Solver
 
 * free to use, just throw me a mention somwhere
+* Limited to pure heave and pure roll (for now)
 * if you figure out a bug pls lmk
 * pair of scripts each for double wishbone and macpherson strut
   * macpherson stuff is prefixed w/ strut
