@@ -51,7 +51,7 @@ def angle(v1: List[float], v2: List[float]):
     uv2 = v2 / norm(v2)
     dot12 = dot(uv1, uv2)
     ang = np.degrees(np.arccos(dot12))
-    return (ang)
+    return ang
 
 
 def pt_to_ln(pt, a, b):
@@ -213,6 +213,7 @@ class KinSolve:
                 link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
                 ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
                 obj_func = [(i**2)*0.5 for i in ass_func]
+                # Jacobian used here  is the matrix derivative of the linear vector norm
                 jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
                 step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
                 error = sum(obj_func)
@@ -225,7 +226,7 @@ class KinSolve:
             # We move each point by the amount the wheel center moved despite them not moving the same
             # This is one of those "good enough" things. I didn't want to bother dithering each point by a different vector
             # keeping track of more than one vector and trying to match it seemed like more effort than it was worth
-            v_move[1] = self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1]
+            v_move[1] = (self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1])
             
             # Repeat Steps 1-4 for all points requested
         
@@ -292,7 +293,7 @@ class KinSolve:
         # by measuring the angle between the kingpin and the Z axis
         kp = [a - b for a, b in zip(self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
         kp_yz = [[y, z] for x, y, z in kp]  # project into YZ plane (front view)
-        cbr_gn = [angle([0, 1], v) for v in kp_yz]  # angle between kp and z-axis in 2d
+        cbr_gn = [-angle(v,[0, 1]) for v in kp_yz]  # angle between kp and z-axis in 2d
         cbr_gn = [i - cbr_gn[steps] + offset_camber for i in cbr_gn]  # compares to static
 
         print("* Caster changes")
@@ -388,6 +389,7 @@ class KinSolve:
         self.contactpatch_yz = cp_yz
         self.scrub_radius = sr
         self.moving_points = moving_points
+        return  self.sa,self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius, self.moving_points
 
     def plot(self,
              suspension: bool = True,
@@ -517,6 +519,9 @@ class KinSolve:
                     connectionstyle="angle3,angleA=0,angleB=-90"))
             ax.set_ylabel('Camber Change [deg]')
             ax.set_title('Camber Gain', pad = 15)
+            # Set min limits on y axis
+            if abs(max(self.camber_gain)-min(self.camber_gain)) < 0.5:
+                ax.set_ylim([min(self.camber_gain)-0.25,max(self.camber_gain)+0.25])
     
         if bump_steer:     
             fig, ax = plt.subplots()
