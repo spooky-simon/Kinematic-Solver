@@ -164,8 +164,6 @@ class KinSolve:
                 if [friend,pt] not in linked_pairs:
                     linked_pairs.append([pt,friend])
         link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
-        # link_lens = (norm(a.origin-b.origin) for [a,b] in linked_pairs)
-        # print([i for i in link_lens])
                 
         # Error Checking
         for pt in moving_points:
@@ -311,7 +309,8 @@ class KinSolve:
         # project to yz plane
         ui_mid = (self.upper_wishbone[0].coords+self.upper_wishbone[1].coords)/2
         upr = [ui_mid[1:] for i in self.upper_wishbone[2].hist]
-        lwr = [self.lower_wishbone[0].coords[1:] for i in self.lower_wishbone[2].hist]
+        lwr_mid = (self.lower_wishbone[0].coords+self.lower_wishbone[1].coords)/2
+        lwr = [lwr_mid[1:] for i in self.lower_wishbone[2].hist]
         uo_yz = [i[1:] for i in self.upper_wishbone[2].hist]
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
@@ -598,7 +597,6 @@ class KinSolve:
             ax.set_title('Scrub Radius Change', pad = 15)
     
         if roll_center_in_roll:
-            # cmap = plt.cm.get_cmap('cividis')
             cmap = plt.cm.get_cmap('turbo')
             print("Plotting Path of Roll Center as Car Rolls...")
             fig, ax = plt.subplots()
