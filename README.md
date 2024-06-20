@@ -21,6 +21,11 @@
 * Slower and less accurate due to eariler version of the grad descent algo.
 	* Probably gonna stay that way because it's good enough
 
+## Assumptions Made by the Code
+* Corner sees pure heave or roll
+* In roll-based analysis, the vertical travel of the side input into the vehicle is equaled in the opposite direction on the opposite side of the car
+* Suspension components are infinitely stiff and there is no compliance
+
 ## Future additions
 * working on a link force solver, check back... at some point in the future
 * rocker geometry and dynamic motion ratios should be coming
