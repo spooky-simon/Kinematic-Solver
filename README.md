@@ -16,7 +16,7 @@
 * run main.py and enjoy:)
 
 #### Double Wishbone (with rocker)
-* Download rocker_alpha and kinsolve_rocker_alpha into same folder
+* Download rocker_alpha and rocker_kinsolve_alpha into same folder
 * Use as above
 	* Be wary
 	* Currently unvalidated
