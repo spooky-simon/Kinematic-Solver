@@ -382,11 +382,12 @@ class KinSolve:
         roll_ang = [-np.degrees(sin(z / (self.wheel_center.origin[1]))) for z in bump_zs]
         
         # Rocker calcs
+        print("* Shock Travel")
 
         # wheel_side_lever = norm(pri-rkr)
         wheel_side_lever = norm(pt_to_ln(self.rocker.origin,self.p_rod[0].origin,self.p_rod[1].origin))
         shock_side_lever = norm(pt_to_ln(self.rocker.origin,self.shock[1].origin,self.shock[0].origin))
-        static_motion_ratio = shock_side_lever / wheel_side_lever
+        self.static_motion_ratio = shock_side_lever / wheel_side_lever
         #print("static motion ratio based on rocker geomtery is:", static_motion_ratio)
 
         # Figure out where push rod pickup point is
@@ -410,7 +411,7 @@ class KinSolve:
 
         (n_i,c_i,r_i) = intersection_of_spheres(c1, c2, self.p_rod[1].origin)
         # Intersect with sphere 3 which is cenetered around lo and has radius lo-pro
-        #third sphere
+        # third sphere
         def intersection_sphere_circle(c_s,r_s,n_i,c_i,r_i):
             dp = dot(n_i, c_i - c_s) # distance of plane to sphere center
             c_p = c_s + dp*n_i # center of circle that is sphere section cut by plane
@@ -441,14 +442,14 @@ class KinSolve:
             return pt_0
 
         # Populate pro.hist
-        print("Populating pro.hist")
+        # print("Populating pro.hist")
         for c_s in self.lower_wishbone[2].hist:
             r_s = norm(self.lower_wishbone[2].origin-self.p_rod[1].origin)
             (p1,p2) = intersection_sphere_circle(c_s, r_s, n_i, c_i, r_i)
             p = higher_pt(p1,p2)
             self.p_rod[1].hist.append(p)
 
-        print("Pro.hist has been filled")
+        # print("Pro.hist has been filled")
 
         # Circle of Rocker
         c_i = self.rocker.origin
@@ -457,14 +458,14 @@ class KinSolve:
             np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[1].origin)))
         
         # Populate pri.hist
-        print("Populating pri.hist")
+        # print("Populating pri.hist")
         for c_s in self.p_rod[1].hist:
             r_s = norm(self.p_rod[0].origin-self.p_rod[1].origin)
             (p1,p2) = intersection_sphere_circle(c_s, r_s, n_i, c_i, r_i)
             p = higher_pt(p1,p2)
             self.p_rod[0].hist.append(p)
 
-        print("Pri.hist has been filled")
+        # print("Pri.hist has been filled")
 
         # find rotation of rocker
         # theta  = cos-1 [ (a · b) / (|a| |b|) ]
@@ -479,7 +480,9 @@ class KinSolve:
             a = self.rocker.origin-self.p_rod[0].hist[i-1]
             b = self.rocker.origin-self.p_rod[0].hist[i]
             rkr_ang_j[i-steps-1] = angle(a, b)
-
+            
+        # print(rkr_ang_r,rkr_ang_j)
+        
         # def rotation_about_axis(pt,axis_a,axis_b,theta):
         def rotation_about_axis(pt,ctr,u_axis,theta):
             cs = np.cos(theta)
@@ -499,21 +502,28 @@ class KinSolve:
             self.shock[1].jhist.append(pt)
 
         self.shock[1].rhist.append(self.shock[1].origin)
-        for theta in rkr_ang_r:
+        # Rebound angles are stored counting from full rebound in rkr _ang_r for some reason
+        # not going to try to understand what I did or why a few years ago but it's easy enough
+        # to just chug through the array backwards
+        for theta in rkr_ang_r[::-1]:
             pt = rotation_about_axis(self.shock[1].rhist[-1], c_i, -n_i, np.radians(theta))
             self.shock[1].rhist.append(pt)
-
+        
         self.shock[1].jr_combine()
+
+        
 
         # find deltas in wheel travel and shock travel
         wc_z = [z for x,y,z in self.wheel_center.hist]
-        wheel_travel = np.diff(wc_z)
+        self.wheel_travel = np.diff(wc_z)
         # wheel_travel is 1 value shorter than wc_z
-        shock_len = [norm(a-self.shock[0].origin) for a in self.shock[1].hist]
-        shock_travel = [-l for l in np.diff(shock_len)]
-        if any(t<0 for t in shock_travel):
+        self.shock_len = [norm(a-self.shock[0].origin) for a in self.shock[1].hist]
+        self.shock_travel = [-l for l in np.diff(self.shock_len)]
+        self.shock_travel2 = [a-b for a,b in zip(self.shock_len[:-1],self.shock_len[1:])]
+        if any(t<0 for t in self.shock_travel):
             print("Ruh roh, your shock went over center")
         
+        print("* Dynamic Motion Ratio")
         # Ok things get a little philosophical here
         # techinically this is the average motion ration between successive 
         # pairs of points that we have sampled. If our number of steps is 100
@@ -526,11 +536,12 @@ class KinSolve:
         # and the other middle ones will be an average of the "198" other points
         # which should give us 2 + 199 = 201
         # and the ones ar the end will just be a little off
-        avg_mr = [a/b for a,b in zip(shock_travel,wheel_travel) if b > 0]
-        mr = [avg_mr[0]] + [(mr1+mr2)/2 for mr1,mr2 in zip(avg_mr[:-1],avg_mr[1:])] + [avg_mr[-1]]
-        
+        avg_mr = [a/b for a,b in zip(self.shock_travel,self.wheel_travel) if b > 0]
+        self.mr = [avg_mr[0]] + [(mr1+mr2)/2 for mr1,mr2 in zip(avg_mr[:-1],avg_mr[1:])] + [avg_mr[-1]]
+        # print(self.mr)
 
         # Save calculated values
+        self.steps = steps
         self.sa = sa
         self.camber_gain = cbr_gn
         self.caster_gain = cstr_gn
@@ -546,15 +557,23 @@ class KinSolve:
 
     def plot(self,
              suspension: bool = True,
+             
              bump_steer: bool = True,
-             camber_gain: bool = True,
-             caster_gain: bool = True,
-             scrub_gain: bool = True,
-             roll_center_in_roll=True,
              bump_steer_in_deg: bool = False,
+
+             camber_gain: bool = True,
              camber_gain_in_deg: bool = False,
+
+             caster_gain: bool = True,
              caster_gain_in_deg: bool = False,
-             scrub_gain_in_deg: bool = False
+
+             scrub_gain: bool = True,
+             scrub_gain_in_deg: bool = False,
+
+             roll_center_in_roll=True,
+             
+             motion_ratio: bool = False,
+             motion_ratio_in_deg: bool = False
              ):
         """
         Put %matplotlib into the kernel to get pop-out graphs that are interactive
@@ -582,7 +601,7 @@ class KinSolve:
                 ax.plot(xs, ys, zs, color = "grey")
             xs, ys, zs = zip(*self.shock[1].hist)
             ax.plot(xs, ys, zs, color = "grey")
-            xs, ys, zs = zip(*self.p_rod[1].hist)
+            xs, ys, zs = zip(*self.p_rod[0].hist)
             ax.plot(xs, ys, zs, color = "grey")
             ax.plot((self.lower_wishbone[0].origin[0], self.lower_wishbone[2].origin[0]),
                     (self.lower_wishbone[0].origin[1], self.lower_wishbone[2].origin[1]),
@@ -653,7 +672,7 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.roll_angle[-1], self.camber_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (0,ann_y), textcoords = 'offset points',
@@ -670,7 +689,7 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.bump_zs[-1], self.camber_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (0,ann_y), textcoords = 'offset points',
@@ -678,7 +697,7 @@ class KinSolve:
                             arrowprops=dict(arrowstyle="->",
                     connectionstyle="angle3,angleA=0,angleB=-90"))
             ax.set_ylabel('Camber Change [deg]')
-            ax.set_title('Camber Gain', pad = 15)
+            ax.set_title('Camber', pad = 15)
             # Set min limits on y axis
             if abs(max(self.camber_gain)-min(self.camber_gain)) < 0.5:
                 ax.set_ylim([min(self.camber_gain)-0.25,max(self.camber_gain)+0.25])
@@ -693,7 +712,7 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.roll_angle[-1], self.bump_steer[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 x_align = 'right' if x > 0 else 'left'
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (0,ann_y), textcoords = 'offset points',
@@ -707,7 +726,7 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.bump_zs[-1], self.bump_steer[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (10,ann_y), textcoords = 'offset points',
                             horizontalalignment='right',
@@ -726,7 +745,7 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.roll_angle[-1], self.caster_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (10,ann_y), textcoords = 'offset points',
                             horizontalalignment='right',
@@ -739,28 +758,28 @@ class KinSolve:
                 # annotation
                 (x,y) = (self.bump_zs[-1], self.caster_gain[-1])
                 s = '('+str(round(x,2))+', '+str(round(y,2))+')'
-                ann_y = 50 if y < 0 else -50
+                ann_y = 75 if y < 0 else -75
                 ax.annotate(s, xy = (x,y), xycoords = 'data',
                             xytext = (10,ann_y), textcoords = 'offset points',
                             horizontalalignment='right',
                             arrowprops=dict(arrowstyle="->",
                     connectionstyle="angle3,angleA=0,angleB=-90"))
             ax.set_ylabel('Caster Change [deg]')
-            ax.set_title('Caster Gain', pad = 15)
+            ax.set_title('Caster', pad = 15)
             
         if scrub_gain:
             fig, ax = plt.subplots()
             ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if caster_gain_in_deg:
                 print("Plotting Scrub Radius vs Vehicle Roll...")
-                ax.plot(self.scrub_radius, self.roll_angle, color = 'k')
+                ax.plot( self.roll_angle, self.scrub_radius, color = 'k')
                 ax.set_xlabel('Vehicle Roll [deg]')
             else:
                 print("Plotting Scrub Radius vs Vertical Travel...")
-                ax.plot(self.scrub_radius, self.bump_zs, color = 'k')
-                ax.set_ylabel('Vertical Wheel Center Travel [' + self.unit + ']')
-            ax.set_xlabel('Scrub Radius ['+self.unit+']')
-            ax.set_title('Scrub Radius Change', pad = 15)
+                ax.plot(self.bump_zs, self.scrub_radius, color = 'k')
+                ax.set_xlabel('Vertical Wheel Center Travel [' + self.unit + ']')
+            ax.set_ylabel('Scrub Radius ['+self.unit+']')
+            ax.set_title('Scrub Radius', pad = 15)
     
         if roll_center_in_roll:
             # cmap = plt.cm.get_cmap('cividis')
@@ -792,4 +811,25 @@ class KinSolve:
             ax.set_title('Dynamic Roll Center', pad = 15)
             fig.colorbar(plt.cm.ScalarMappable(norm=norm, cmap=cmap), ax=ax, label = 'Roll [deg]')
     
+        if motion_ratio:
+            fig, ax = plt.subplots()
+            if motion_ratio_in_deg:
+                print("Plotting Motion Ratio vs Vehicle Roll")
+                ax.plot(self.roll_angle, self.mr, color = 'k')
+                ax.set_xlabel('Vehicle Roll [deg]')
+            else:
+                ax.plot(self.bump_zs, self.mr, color = 'k')
+                ax.set_xlabel('Vertical Wheel Center Travel')
+                x_max = self.bump_zs[-1]
+                x_min = self.bump_zs[0]
+            ax.set_ylabel('Motion Ratio')
+            ax.set_title('Dynamic Motion Ratio')
+            # Annotation
+            if self.mr[-1] > self.mr[self.steps]:
+                # upwards slope
+                ax.annotate("Max Motion Ratio: "+str(self.mr[-1])[:4]+"\n"+
+                            "Avg Motion Ratio: "+str(np.mean(self.mr))[:4]+"\n"+
+                            "Min Motion Ratio: "+str(self.mr[0])[:4],
+                            (x_max,self.mr[0]), ha="right")
+                
         plt.show()

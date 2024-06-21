@@ -33,7 +33,7 @@ def main():
     
     # Pushrod or Pullrod Points
     # The P-rod inner point is the outboard (usually) point of the rocker/bellcrank
-    pri = Point([ -11.3792, 312.42  ,  487.934 ])
+    pri = Point([ -11.3792, 350  ,  487.934 ])
     pro = Point([ -13.9192, 556.8442,  124.9426])
     
     # Rocker Center of Rotation
@@ -41,7 +41,7 @@ def main():
     
     # Shock Pickup Points (upper, lower)
     # The shock upper point is the inner (usually) point of the rocker/bellcrank
-    sku = Point([ -11     , 200     ,  490])
+    sku = Point([ -11     , 250     ,  490])
     skl = Point([ -11     , 100     ,  300])
 
     """ Suspension Setup """
@@ -73,9 +73,9 @@ def main():
         upper_wishbone=(ufi, uai, uo),
         tie_rod=(tri, tro),
         
-        p_rod=(pri,pro),
+        p_rod=(pri, pro),
         rocker=rkr,
-        shock=(skl,sku),
+        shock=(skl, sku),
 
         full_jounce=full_jounce,
         full_rebound=full_rebound,
@@ -107,15 +107,23 @@ def main():
     """ Plot """
     kin.plot(
         suspension=True,  # Visualize the corner
+        
         bump_steer=False,  # Bump Steer vs vertical travel
-        camber_gain=False,  # Camber Gain vs vertical travel
-        caster_gain=False,  # Caster gain plot
-        scrub_gain = False, # Scrub change plot
-        roll_center_in_roll=False,  # Path of roll center as the car rolls
         bump_steer_in_deg=False,  # Sets y-axis of bump steer plot to roll angle in deg
+
+        camber_gain=False,  # Camber Gain vs vertical travel
         camber_gain_in_deg=False,  # Sets y-axis of camber gain plot to roll angle in deg
+
+        caster_gain=False,  # Caster gain plot
         caster_gain_in_deg=False,  # Sets y-axis of caster gain plot to roll angle in deg
-        scrub_gain_in_deg = False    # Sets y-axis of scrub gain plot to roll angle in deg
+
+        scrub_gain = False, # Scrub change plot
+        scrub_gain_in_deg = False,    # Sets y-axis of scrub gain plot to roll angle in deg
+
+        roll_center_in_roll=False,  # Path of roll center as the car rolls
+        
+        motion_ratio=True, # Motion Ratio vs vertical travel
+        motion_ratio_in_deg=False # Sets y-axis of motion ratio plot to roll angle in deg
     )
 
 
