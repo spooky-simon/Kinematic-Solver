@@ -14,6 +14,13 @@
 * just download kinsolve.py and main.py into the same folder
 * open main.py and input your parameters
 * run main.py and enjoy:)
+
+#### Double Wishbone (with rocker)
+* Download rocker_alpha and kinsolve_rocker_alpha into same folder
+* Use as above
+** Be wary
+** Currently unvalidated
+
 #### MacPherson Strut
 * just download strutsolve.py and strutmain.py into the same folder
 * open strutmain.py and input your parameters
@@ -28,7 +35,7 @@
 
 ## Future additions
 * working on a link force solver, check back... at some point in the future
-* rocker geometry and dynamic motion ratios should be coming
+* ~~rocker geometry and dynamic motion ratios should be coming~~
 
 ## Known bugs
 * Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
