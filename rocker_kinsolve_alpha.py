@@ -539,16 +539,15 @@ class KinSolve:
         # then we should have 201 points in the history of each moved point
         # but our motion ratio is calculated on the movement between points
         # so there would only be 200 values of "between points"
-        # and none of them would be the tru value at any sampled point.
+        # and none of them would be the true value at any sampled point.
         # So I will do another round of "good enough" kinematics, where the 2
         # end points will just be the extremes of the "200" motion ratio values
-        # and the other middle ones will be an average of the "198" other points
-        # which should give us 2 + 199 = 201
-        # and the ones ar the end will just be a little off
+        # and the other middle ones will be an average of neighboring pairs of 
+        # the 200 pts which should give us 2 + 199 = 201
+        # and the ones at the end will just be a little off
         avg_mr = [a/b for a,b in zip(self.shock_travel,self.wheel_travel) if b > 0]
         self.mr = [avg_mr[0]] + [(mr1+mr2)/2 for mr1,mr2 in zip(avg_mr[:-1],avg_mr[1:])] + [avg_mr[-1]]
-        # print(self.mr)
-
+                
         # Save calculated values
         self.steps = steps
         self.sa = sa
