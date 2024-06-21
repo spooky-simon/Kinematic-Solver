@@ -37,6 +37,7 @@
 * working on a link force solver, check back... at some point in the future
 * ~~rocker geometry and dynamic motion ratios should be coming~~ Currently in an early unvalidated state
 * Report Generator to help organize all the information
+* There is a way to do this with like reverse kinematics, or just intersection of spheres - which would reduce calclulations and improve speed
 
 ## Known bugs
 * Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
