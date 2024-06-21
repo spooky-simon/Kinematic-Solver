@@ -7,7 +7,7 @@
   * macpherson stuff is prefixed w/ strut
 * See Naming_Convention for double wishbone points naming convention used in this script
 * code should be somewhat commented... grad descent algorithm partially stolen from wikipedia
-* approach taken from Spinning Thumbs on yt
+* Grad descent approach taken from Spinning Thumbs on yt
 
 ## How to use
 #### Double Wishbone
