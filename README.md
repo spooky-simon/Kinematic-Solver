@@ -7,7 +7,7 @@
   * macpherson stuff is prefixed w/ strut
 * See Naming_Convention for double wishbone points naming convention used in this script
 * code should be somewhat commented... grad descent algorithm partially stolen from wikipedia
-* approach taken from Spinning Thumbs on yt
+* Grad descent approach taken from Spinning Thumbs on yt
 
 ## How to use
 #### Double Wishbone
@@ -37,6 +37,7 @@
 * working on a link force solver, check back... at some point in the future
 * ~~rocker geometry and dynamic motion ratios should be coming~~ Currently in an early unvalidated state
 * Report Generator to help organize all the information
+* Analytical solver instead of grad descent (preliminary trials show ~x20 speed increase)
 
 ## Known bugs
 * Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
