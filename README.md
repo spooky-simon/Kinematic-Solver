@@ -18,8 +18,8 @@
 #### Double Wishbone (with rocker)
 * Download rocker_alpha and kinsolve_rocker_alpha into same folder
 * Use as above
-** Be wary
-** Currently unvalidated
+	* Be wary
+	* Currently unvalidated
 
 #### MacPherson Strut
 * just download strutsolve.py and strutmain.py into the same folder
