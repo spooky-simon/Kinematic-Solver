@@ -88,17 +88,9 @@ def main():
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
     # and it will result in a comprehensible amount of data
     num_steps = 100
-    # happy is the error margin for the gradient descent to be considered complete
-    # learning rate scales the rate at which the algorithm descends the slope
-    # learning rate is not worth messing with, just leave it
-    happy = 10 ** -5
-    learning_rate = 10 ** -3
-    # I did not implement a dynamic learning rate because im lazy and this works
     
     kin.solve(
         steps=num_steps,
-        happy=happy,
-        learning_rate=learning_rate,
         offset_toe=toe,
         offset_camber=camber,
         offset_caster=caster

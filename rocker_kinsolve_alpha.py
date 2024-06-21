@@ -105,6 +105,76 @@ def seg_intersect(a1, a2, b1, b2):
     num = dot(dap, dp)
     return (num / denom) * db + b1
 
+def intersection_of_spheres(center_1,center_2,intersection_pt):
+    """
+    Intersection of two spheres if an intersection point is known.
+    """
+    
+    # Distance between sphere centers
+    # Radii of spheres
+    # Fraction along line between centers that the circle sits on
+    d  = norm(center_1 - center_2)
+    r1 = norm(center_1 - intersection_pt)
+    r2 = norm(center_2 - intersection_pt)
+    h = 0.5 + (r1*r1 - r2*r2) / (2 * d*d)
+    
+    # Radius of circle of intersection
+    r_i = np.sqrt(r1*r1 - h*h * d*d)
+    
+    # Normal vector
+    n_i = (center_2 - center_1)/d
+    
+    # Center of circle of intersection
+    c_i = center_1 + h * (center_2 - center_1)
+    
+    return n_i, c_i, r_i
+
+def intersection_of_spheres_radii(center_1,center_2, r1, r2):
+    """
+    Intersection of two spheres if an intersection point is not known,
+    but the radii to the circle of intersection is known.
+    """
+    
+    # Distance between sphere centers
+    # Fraction along line between centers that the circle sits on
+    d  = norm(center_1 - center_2)
+    h = 0.5 + (r1*r1 - r2*r2) / (2 * d*d)
+    
+    # Radius of circle of intersection
+    r_i = np.sqrt(r1*r1 - h*h * d*d)
+    
+    # Normal vector
+    n_i = (center_2 - center_1)/d
+    
+    # Center of circle of intersection
+    c_i = center_1 + h * (center_2 - center_1)
+    
+    return n_i, c_i, r_i
+
+def intersection_sphere_circle(c_s,r_s,n_i,c_i,r_i):
+    dp = np.dot(n_i, c_i - c_s) # distance of plane to sphere center
+    c_p = c_s + dp*n_i # center of circle that is sphere section cut by plane
+    r_p = np.sqrt(r_s*r_s - dp*dp) # radius of circle that is sphere section cut by plane
+    if abs(dp) > r_s:
+        print("distance between centers:", abs(dp))
+        print("radius of sphere:", r_s)
+        print("ruh roh, sphere does not intersect circle")
+        return
+    d = norm(c_i-c_p) # distance between centers
+    if d > r_i + r_p:
+        print("ruh roh, circles do not intersect?")
+        return
+    if d + min(r_i, r_p) < max(r_i, r_p):
+        print("ruh roh, one circle is inside the other")
+        return
+    h = 0.5 + (r_i*r_i - r_p*r_p) / (2 * d*d) # ratio of circle sizes
+    r_j = np.sqrt(r_i*r_i - h*h * d*d) # distance from center line 
+    c_j = c_i + h * (c_p - c_i) # point along center line
+    t = (np.cross(c_p - c_i, n_i))/norm(np.cross(c_p - c_i, n_i))
+    p_0 = c_j - t * r_j
+    p_1 = c_j + t * r_j
+    return p_0, p_1
+
 
 @dataclass()
 class KinSolve:
@@ -148,134 +218,114 @@ class KinSolve:
         Solves stuff
 
         :param steps: Number of steps in each direction. (e.g. 10 -> 20 datapoints)
-        :param happy: Error margin for gradient descent to be considered complete
-        :param learning_rate: Learning rate
         :param offset_toe: Static offset
         :param offset_camber: Static offset
         :param offset_caster: Static offset
         """
         
-        moving_points = [self.wheel_center,
-                          self.tie_rod[1],
-                          self.upper_wishbone[2],
-                          self.lower_wishbone[2]]
+        t0 = time.time_ns()
+        
+        v_move = 25/steps # mm
+        self.lower_wishbone[2].hist = [self.lower_wishbone[2].origin]
 
-        """ Gradient Descent """
-        # Derive link lengths for use in Grad Descent
-        linked_pairs = []
-        for pt in moving_points:
-            for friend in pt.friends:
-                if [friend,pt] not in linked_pairs:
-                    linked_pairs.append([pt,friend])
-        link_lens = [norm(a.origin-b.origin) for [a,b] in linked_pairs]
-        # link_lens = (norm(a.origin-b.origin) for [a,b] in linked_pairs)
-        # self.p_rod[0]nt([i for i in link_lens])
+        uprt_ht = norm(self.upper_wishbone[2].origin- self.lower_wishbone[2].origin)
+        u_t_d = norm(self.upper_wishbone[2].origin - self.tie_rod[1].origin)
+        l_t_d = norm(self.lower_wishbone[2].origin - self.tie_rod[1].origin)
+        tr_d = norm(self.tie_rod[0].origin - self.tie_rod[1].origin)
+        u_wc = norm(self.upper_wishbone[2].origin - self.wheel_center.origin)
+        l_wc = norm(self.lower_wishbone[2].origin - self.wheel_center.origin)
+        str_arm = norm(self.tie_rod[1].origin - self.wheel_center.origin)
+
+
+
+        # Step 1: Find the arcs traced out by the upper and lower outboard pickup points.
+        # All orientations of the suspension linkages MUST have the upper and lower 
+        # Outboard pickup points along their respective arcs.
+        # These arcs are defined by a normal axis, a center point, and a radius
+        n_u, c_u, r_u = intersection_of_spheres(self.upper_wishbone[0].origin, self.upper_wishbone[1].origin, self.upper_wishbone[2].origin)
+        n_l, c_l, r_l = intersection_of_spheres(self.lower_wishbone[0].origin, self.lower_wishbone[1].origin, self.lower_wishbone[2].origin)
+
+        # Step 2: We eventually want to look at wheel center movement. Unfortunately the 
+        # wheel center location is found by first finding all of the other points first. 
+        # So in order to increment the wheel up and down to sample an orientation, we
+        # can only move a point that is defined by suspension points that do not 
+        # articulate. The only possible points are the lower or upper outboard pickup points.
+        # I have chosen to move the lower point and all other points will follow. This is
+        # a "good enough" moment where the suspension is likely linear enough for this 
+        # to request an articulation through full rebound and jounce.
+        # To do this, we want to find points that are a certain distance (v_move) away
+        # from the static lower outer point. This means finding the intersection of a
+        # sphere of radius v_move centered around the lower outer point and the arc
+        # traced out by the lower outer point. This yields 2 points, one will be in jounce,
+        # the other will be in rebound.
+
+        for i in range(1, steps+1):
+            
+            stp = v_move * i
+            # Generate lower arm movement
+            p0,p1 = intersection_sphere_circle (self.lower_wishbone[2].origin, v_move * i, n_l, c_l, r_l)
+            
+            # if p1 is the jounce point (higher in z)
+            # put it on the end and p0 on the beginning
+            if p1[2] > p0[2]:
+                self.lower_wishbone[2].hist = [p0] + self.lower_wishbone[2].hist + [p1]
+            else:
+                self.lower_wishbone[2].hist = [p1] + self.lower_wishbone[2].hist + [p0]
+
+        # Step 3: To find the upper point at each sample point, we need to find the 
+        # intersection of a sphere centered at the lower outboard point with radius 
+        # equal to the upright height and the arc traced out by the upper outboard point
+
+        for pt in self.lower_wishbone[2].hist:
+            
+            # find both points of intersection
+            p2, p3 = intersection_sphere_circle(pt, uprt_ht, n_u, c_u, r_u)
+            
+            # since we know the upper pointis always above the lower (....)
+            # we can discard the lower point
+            if p3[2] > p2[2]:
+                self.upper_wishbone[2].hist.append(p3)
+            else:
+                self.upper_wishbone[2].hist.append(p2)
+
+        # Step 4: Find the steering arm point / tie rod outer point using our spheres. 
+        # The tie rod outer point must lie along a circle that is equidistant from both 
+        # the upper and lower pick-up points. To find the point on this circle, we use a sphere
+        # with radius equal to the tie rod length to intersect the circle
+
+        # Step 5: (In the same for loop) Find the wheel center
+        # Now we have three points at each articulation step. Using methods similar to
+        # the previous steps, we find the wheel center.
+
+        for lp, up in zip (self.lower_wishbone[2].hist, self.upper_wishbone[2].hist):
+            
+            # tie rod circle
+            n_t, c_t, r_t = intersection_of_spheres_radii(lp, up, l_t_d, u_t_d)
+            
+            # intersection with tie rod length    
+            p4, p5 = intersection_sphere_circle(self.tie_rod[0].origin, tr_d, n_t, c_t, r_t)
+            
+            # one point will result in non-possible wheel position
+            # the point that is further inboard is almost (hopefully) guaranteed to be wrong
+            if p4[1] > p5[1]:
+                self.tie_rod[1].hist.append(p4)
+            else:
+                self.tie_rod[1].hist.append(p5)
+            
+            # wheel_center circle
+            n_w, c_w, r_w = intersection_of_spheres_radii(lp, up, l_wc, u_wc)
+            # intersect with steer pt
+            p6, p7 = intersection_sphere_circle(self.tie_rod[1].hist[-1], str_arm, n_w, c_w, r_w)
+            
+            # one of these will be non-possible -wheel flipped around
+            if p7[1] > p6[1]:
+                self.wheel_center.hist.append(p7)
+            else:
+                self.wheel_center.hist.append(p6)
                 
-        # Error Checking
-        for pt in moving_points:
-            for friend in pt.friends:
-                if pt == friend:
-                    sys.exit("Point can't be it's own friend... :(")
-            if len(pt.friends) < 1:
-                sys.exit("Trying to move a point with no friends")
-        
-        print("Solving for Jounce Kinematics...")
-        # This is the good stuff
-        # This is the "meat" of the meat and potatoes of the code
-        # I'm straight up not explaining gradient decsent in code comments
-        # but it loops through each step and solves the whole shibang muy bueno
-        
-        # Step 0: Initialize the clock for timing,
-        # the err list for error tracking which I dont have turned on in this code, but if you graph it, its very cool,
-        # and the initial vector that is starting the next grad descent problem
-        t0 = time.time_ns()
-        err = []
-        v_move = [0, 0, self.full_jounce / steps]
-        
-        # As much as I hate for loops, this has to be done sequentially, as subsequent steps
-        # rely on the previous step for its initial condition
-        # this isnt that slow because.. i dont know how computers work so idk
-        for i in range(0, steps):
             
-            # Step 1: Loop through all movable points and append the current
-            #         location to the points' respective jounce history
-            for pt in moving_points:
-                pt.jhist.append(pt.coords)
-                pt.coords = pt.coords + v_move
-            
-            # Step 2: Initialize the error value at a value higher that "happy"
-            # 1 was chosen because I have a simple mind
-            error = 1
-            err.append([error])
-            
-            # Step 3: while loop that contains the grad descent work for each step
-            # The while loop does grad descent steps until the error value is low enough
-            # The grad descent basically adjusts each movable point until the link lengths are close enough to the original link lengths to call it good
-            # If all the link lengths are very very close to the static link lengths, you have found a feasible suspension articulation
-            # This whole script relies on the fact that this grad descent algo will just find the closest local miminum and chill
-            while error > happy:               
-                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
-                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
-                obj_func = [(i**2)*0.5 for i in ass_func]
-                # Jacobian used here  is the matrix derivative of the linear vector norm
-                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
-                step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
-                error = sum(obj_func)
-                for pair,step_ in zip(linked_pairs,step):
-                    pair[0].coords = pair[0].coords - step_
-                err[i].append(error)
-            
-            # Step 4: Once the suspension has moved, we can update the move vector to follow the arc traced out by the wheel center
-            # This enables us to start each grad descent problem closer to a local minimum speeding up the whole thing mega fast
-            # We move each point by the amount the wheel center moved despite them not moving the same
-            # This is one of those "good enough" things. I didn't want to bother dithering each point by a different vector
-            # keeping track of more than one vector and trying to match it seemed like more effort than it was worth
-            v_move[1] = (self.wheel_center.coords[1] - self.wheel_center.jhist[-1][1])
-            
-            # Repeat Steps 1-4 for all points requested
-        
-        # Step 5: append the final points' locations to their jounce histories
-        for pt in moving_points:
-            pt.jhist.append(pt.coords)
-        
-        # Stop the clock and report time
         t1 = time.time_ns()
-        print("Solved Jounce in", (t1 - t0) / 10 ** 6, "ms")
-
-        # Reset to do rebound
-        # All comments in Jounce apply here for Rebound
-        for pt in moving_points:
-            pt.coords = pt.origin
-        err = []
-        v_move = [0, 0, self.full_rebound / steps]
-
-        print("Solving for Rebound Kinematics...")
-        t0 = time.time_ns()
-        for i in range(0, steps): 
-            for pt in moving_points:
-                pt.rhist.append(pt.coords)
-                pt.coords = pt.coords + v_move
-            error = 1
-            err.append([])
-            while error > happy:
-                link_lens2 = [norm(a.coords-b.coords) for [a,b] in linked_pairs]
-                ass_func = [a-b for a,b in zip(link_lens2,link_lens)]
-                obj_func = [(i**2)*0.5 for i in ass_func]
-                jcbn = [2 * (a.coords - b.coords) for a,b in linked_pairs]
-                step = [a*b*learning_rate for a,b in zip(jcbn,ass_func)]
-                error = sum(obj_func)
-                for pair,step_ in zip(linked_pairs,step):
-                    pair[0].coords = pair[0].coords - step_
-                err[i].append(error)
-            v_move[1] = self.wheel_center.coords[1] - self.wheel_center.rhist[-1][1]
-        for pt in moving_points:
-            pt.rhist.append(pt.coords)
-        t1 = time.time_ns()
-        print("Solved rebound in", (t1 - t0) / 10 ** 6, "ms")
-
-        # Combine Jounce and Rebound into a single list
-        for pt in moving_points:
-            pt.jr_combine()
+        print("Solved everything in", (t1 - t0) / 10 ** 6, "ms")
         
         # Now we have all of our suspension kinematics
         # We can use these to do math and figure out kinematic behavior
@@ -407,43 +457,43 @@ class KinSolve:
             c1 = self.upper_wishbone[0].origin
             c2 = self.upper_wishbone[1].origin
 
-        def intersection_of_spheres(center_1,center_2,intersection_pt):
-            #intersection of two spheres
-            d  = norm(center_1 - center_2)
-            r1 = norm(center_1 - intersection_pt)
-            r2 = norm(center_2 - intersection_pt)
-            h = 0.5 + (r1*r1 - r2*r2) / (2 * d*d)
-            r_i = np.sqrt(r1*r1 - h*h * d*d)
-            n_i = (center_2 - center_1)/d
-            c_i = center_1 + h * (center_2 - center_1)
-            return n_i, c_i, r_i
+        # def intersection_of_spheres(center_1,center_2,intersection_pt):
+        #     #intersection of two spheres
+        #     d  = norm(center_1 - center_2)
+        #     r1 = norm(center_1 - intersection_pt)
+        #     r2 = norm(center_2 - intersection_pt)
+        #     h = 0.5 + (r1*r1 - r2*r2) / (2 * d*d)
+        #     r_i = np.sqrt(r1*r1 - h*h * d*d)
+        #     n_i = (center_2 - center_1)/d
+        #     c_i = center_1 + h * (center_2 - center_1)
+        #     return n_i, c_i, r_i
 
         (n_i,c_i,r_i) = intersection_of_spheres(c1, c2, self.p_rod[1].origin)
         # Intersect with sphere 3 which is cenetered around lo and has radius lo-pro
         # third sphere
-        def intersection_sphere_circle(c_s,r_s,n_i,c_i,r_i):
-            dp = dot(n_i, c_i - c_s) # distance of plane to sphere center
-            c_p = c_s + dp*n_i # center of circle that is sphere section cut by plane
-            r_p = np.sqrt(r_s*r_s - dp*dp) # radius of circle that is sphere section cut by plane
-            if abs(dp) > r_s:
-                print("distance between centers:", abs(dp))
-                print("radius of sphere:", r_s)
-                print("ruh roh, sphere does not intersect circle")
-                return
-            d = norm(c_i-c_p) # distance between centers
-            if d > r_i + r_p:
-                print("ruh roh, circles do not intersect?")
-                return
-            if d + min(r_i, r_p) < max(r_i, r_p):
-                print("ruh roh, one circle is inside the other")
-                return
-            h = 0.5 + (r_i*r_i - r_p*r_p) / (2 * d*d) # ratio of circle sizes
-            r_j = np.sqrt(r_i*r_i - h*h * d*d) # distance from center line 
-            c_j = c_i + h * (c_p - c_i) # point along center line
-            t = (np.cross(c_p - c_i, n_i))/norm(np.cross(c_p - c_i, n_i))
-            p_0 = c_j - t * r_j
-            p_1 = c_j + t * r_j
-            return p_0,p_1
+        # def intersection_sphere_circle(c_s,r_s,n_i,c_i,r_i):
+        #     dp = dot(n_i, c_i - c_s) # distance of plane to sphere center
+        #     c_p = c_s + dp*n_i # center of circle that is sphere section cut by plane
+        #     r_p = np.sqrt(r_s*r_s - dp*dp) # radius of circle that is sphere section cut by plane
+        #     if abs(dp) > r_s:
+        #         print("distance between centers:", abs(dp))
+        #         print("radius of sphere:", r_s)
+        #         print("ruh roh, sphere does not intersect circle")
+        #         return
+        #     d = norm(c_i-c_p) # distance between centers
+        #     if d > r_i + r_p:
+        #         print("ruh roh, circles do not intersect?")
+        #         return
+        #     if d + min(r_i, r_p) < max(r_i, r_p):
+        #         print("ruh roh, one circle is inside the other")
+        #         return
+        #     h = 0.5 + (r_i*r_i - r_p*r_p) / (2 * d*d) # ratio of circle sizes
+        #     r_j = np.sqrt(r_i*r_i - h*h * d*d) # distance from center line 
+        #     c_j = c_i + h * (c_p - c_i) # point along center line
+        #     t = (np.cross(c_p - c_i, n_i))/norm(np.cross(c_p - c_i, n_i))
+        #     p_0 = c_j - t * r_j
+        #     p_1 = c_j + t * r_j
+        #     return p_0,p_1
             
         def higher_pt(pt_0,pt_1):
             if pt_1[2] > pt_0[2]:
@@ -560,8 +610,9 @@ class KinSolve:
         self.instant_center = ic
         self.contactpatch_yz = cp_yz
         self.scrub_radius = sr
-        self.moving_points = moving_points
-        return  self.sa,self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius, self.moving_points
+        # self.moving_points = moving_points
+        return  self.sa,self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius
+                # self.moving_points
 
     def plot(self,
              suspension: bool = True,
@@ -604,8 +655,8 @@ class KinSolve:
             ax.view_init(elev=18., azim=26)
             for pt in [self.wheel_center, *self.upper_wishbone, *self.lower_wishbone, *self.tie_rod, *self.p_rod, self.rocker, *self.shock]:
                 ax.scatter(pt.origin[0], pt.origin[1], pt.origin[2], color = "k", s = 5)
-            for pt in self.moving_points:
-                xs, ys, zs = zip(*pt.hist)
+            for pt in [self.upper_wishbone[2].hist, self.lower_wishbone[2].hist, self.tie_rod[1].hist, self.wheel_center.hist, self.p_rod[1].hist]:
+                xs, ys, zs = zip(*pt)
                 ax.plot(xs, ys, zs, color = "grey")
             xs, ys, zs = zip(*self.shock[1].hist)
             ax.plot(xs, ys, zs, color = "grey")
