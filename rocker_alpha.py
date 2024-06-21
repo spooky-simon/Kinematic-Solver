@@ -33,16 +33,16 @@ def main():
     
     # Pushrod or Pullrod Points
     # The P-rod inner point is the outboard (usually) point of the rocker/bellcrank
-    pri = Point([ -11.3792, 350  ,  487.934 ])
+    pri = Point([ -20.3792, 350  ,  487.934 ])
     pro = Point([ -13.9192, 556.8442,  124.9426])
     
     # Rocker Center of Rotation
-    rkr = Point([ -11.38  , 280     ,  450])
+    rkr = Point([ -23.38  , 280     ,  450])
     
     # Shock Pickup Points (upper, lower)
     # The shock upper point is the inner (usually) point of the rocker/bellcrank
-    sku = Point([ -11     , 250     ,  490])
-    skl = Point([ -11     , 100     ,  300])
+    sku = Point([ -25     , 180     ,  490])
+    skl = Point([ -30     , 150     ,  300])
 
     """ Suspension Setup """
     # Full jounce and rebound mark the bounds for the solver
@@ -122,7 +122,7 @@ def main():
 
         roll_center_in_roll=False,  # Path of roll center as the car rolls
         
-        motion_ratio=True, # Motion Ratio vs vertical travel
+        motion_ratio=False, # Motion Ratio vs vertical travel
         motion_ratio_in_deg=False # Sets y-axis of motion ratio plot to roll angle in deg
     )
 

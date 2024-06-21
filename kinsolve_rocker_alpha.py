@@ -393,10 +393,19 @@ class KinSolve:
         # Figure out where push rod pickup point is
         # Find equation of circle that push rod rotates through
         # by intersection of spheres
-        # Sphere 1 is centered around lfi
-        # Sphere 2 is centered around lai
-        c1 = self.lower_wishbone[0].origin
-        c2 = self.lower_wishbone[1].origin
+        # Step 1: figure out if pickup point of push rod is on upper or lower a-arm
+        dist_to_upper = norm(self.p_rod[1].origin - self.upper_wishbone[2].origin)
+        dist_to_lower = norm(self.p_rod[1].origin - self.lower_wishbone[2].origin)
+        if dist_to_upper > dist_to_lower:
+            # Sphere 1 is centered around lfi
+            # Sphere 2 is centered around lai
+            c1 = self.lower_wishbone[0].origin
+            c2 = self.lower_wishbone[1].origin
+        else:
+            # Sphere 1 is centered around ufi
+            # Sphere 2 is centered around uai
+            c1 = self.upper_wishbone[0].origin
+            c2 = self.upper_wishbone[1].origin
 
         def intersection_of_spheres(center_1,center_2,intersection_pt):
             #intersection of two spheres
@@ -454,8 +463,8 @@ class KinSolve:
         # Circle of Rocker
         c_i = self.rocker.origin
         r_i = norm(self.rocker.origin - self.p_rod[0].origin)
-        n_i = np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[1].origin))/norm(
-            np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[1].origin)))
+        n_i = np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[0].origin))/norm(
+            np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[0].origin)))
         
         # Populate pri.hist
         # print("Populating pri.hist")
@@ -821,7 +830,6 @@ class KinSolve:
                 ax.plot(self.bump_zs, self.mr, color = 'k')
                 ax.set_xlabel('Vertical Wheel Center Travel')
                 x_max = self.bump_zs[-1]
-                x_min = self.bump_zs[0]
             ax.set_ylabel('Motion Ratio')
             ax.set_title('Dynamic Motion Ratio')
             # Annotation
@@ -830,6 +838,11 @@ class KinSolve:
                 ax.annotate("Max Motion Ratio: "+str(self.mr[-1])[:4]+"\n"+
                             "Avg Motion Ratio: "+str(np.mean(self.mr))[:4]+"\n"+
                             "Min Motion Ratio: "+str(self.mr[0])[:4],
+                            (x_max,self.mr[0]), ha="right")
+            else:
+                ax.annotate("Max Motion Ratio: "+str(self.mr[0])[:4]+"\n"+
+                            "Avg Motion Ratio: "+str(np.mean(self.mr))[:4]+"\n"+
+                            "Min Motion Ratio: "+str(self.mr[-1])[:4],
                             (x_max,self.mr[0]), ha="right")
                 
         plt.show()
