@@ -17,6 +17,7 @@
 
 #### Double Wishbone (with rocker)
 * Download rocker_alpha and rocker_kinsolve_alpha into same folder
+* Uses a different solver so it should be ~10x faster depending on your machine
 * Use as above
 	* Be wary
 	* Currently unvalidated
@@ -37,7 +38,7 @@
 * working on a link force solver, check back... at some point in the future
 * ~~rocker geometry and dynamic motion ratios should be coming~~ Currently in an early unvalidated state
 * Report Generator to help organize all the information
-* Analytical solver instead of grad descent (preliminary trials show ~x7 speed increase)
+* ~~Analytical solver instead of grad descent~~ present in alpha version of rocker script
 
 ## Known bugs
 * Roll center is off by a few mm. This is due to tolerance stackup in the calculations. I don't think its worth chasing this down, as the behavior is correct, and the magintude is only off by a few mm
