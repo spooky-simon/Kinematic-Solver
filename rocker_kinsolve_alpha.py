@@ -527,7 +527,7 @@ class KinSolve:
         self.wheel_travel = np.diff(wc_z)
         # wheel_travel is 1 value shorter than wc_z
         self.shock_len = [norm(a-self.shock[0].origin) for a in self.shock[1].hist]
-        self.shock_travel = [-l for l in np.diff(self.shock_len)]
+        self.shock_travel = [l for l in np.diff(self.shock_len)]
         self.shock_travel2 = [a-b for a,b in zip(self.shock_len[:-1],self.shock_len[1:])]
         if any(t<0 for t in self.shock_travel):
             print("Ruh roh, your shock went over center")
@@ -838,11 +838,13 @@ class KinSolve:
                 ax.annotate("Max Motion Ratio: "+str(self.mr[-1])[:4]+"\n"+
                             "Avg Motion Ratio: "+str(np.mean(self.mr))[:4]+"\n"+
                             "Min Motion Ratio: "+str(self.mr[0])[:4],
-                            (x_max,self.mr[0]), ha="right")
+                            (x_max,self.mr[0]),
+                            ha="right", va="bottom")
             else:
                 ax.annotate("Max Motion Ratio: "+str(self.mr[0])[:4]+"\n"+
                             "Avg Motion Ratio: "+str(np.mean(self.mr))[:4]+"\n"+
                             "Min Motion Ratio: "+str(self.mr[-1])[:4],
-                            (x_max,self.mr[0]), ha="right")
+                            (x_max,self.mr[0]),
+                            ha="right", va="top")
                 
         plt.show()

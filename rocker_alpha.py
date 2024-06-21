@@ -41,7 +41,7 @@ def main():
     
     # Shock Pickup Points (upper, lower)
     # The shock upper point is the inner (usually) point of the rocker/bellcrank
-    sku = Point([ -25     , 180     ,  490])
+    sku = Point([ -25     , 150     ,  490])
     skl = Point([ -30     , 150     ,  300])
 
     """ Suspension Setup """
@@ -122,7 +122,7 @@ def main():
 
         roll_center_in_roll=False,  # Path of roll center as the car rolls
         
-        motion_ratio=False, # Motion Ratio vs vertical travel
+        motion_ratio=True, # Motion Ratio vs vertical travel
         motion_ratio_in_deg=False # Sets y-axis of motion ratio plot to roll angle in deg
     )
 
