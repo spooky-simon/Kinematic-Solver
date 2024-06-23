@@ -456,43 +456,7 @@ class KinSolve:
             c1 = self.upper_wishbone[0].origin
             c2 = self.upper_wishbone[1].origin
 
-        # def intersection_of_spheres(center_1,center_2,intersection_pt):
-        #     #intersection of two spheres
-        #     d  = norm(center_1 - center_2)
-        #     r1 = norm(center_1 - intersection_pt)
-        #     r2 = norm(center_2 - intersection_pt)
-        #     h = 0.5 + (r1*r1 - r2*r2) / (2 * d*d)
-        #     r_i = np.sqrt(r1*r1 - h*h * d*d)
-        #     n_i = (center_2 - center_1)/d
-        #     c_i = center_1 + h * (center_2 - center_1)
-        #     return n_i, c_i, r_i
-
         (n_i,c_i,r_i) = intersection_of_spheres(c1, c2, self.p_rod[1].origin)
-        # Intersect with sphere 3 which is cenetered around lo and has radius lo-pro
-        # third sphere
-        # def intersection_sphere_circle(c_s,r_s,n_i,c_i,r_i):
-        #     dp = dot(n_i, c_i - c_s) # distance of plane to sphere center
-        #     c_p = c_s + dp*n_i # center of circle that is sphere section cut by plane
-        #     r_p = np.sqrt(r_s*r_s - dp*dp) # radius of circle that is sphere section cut by plane
-        #     if abs(dp) > r_s:
-        #         print("distance between centers:", abs(dp))
-        #         print("radius of sphere:", r_s)
-        #         print("ruh roh, sphere does not intersect circle")
-        #         return
-        #     d = norm(c_i-c_p) # distance between centers
-        #     if d > r_i + r_p:
-        #         print("ruh roh, circles do not intersect?")
-        #         return
-        #     if d + min(r_i, r_p) < max(r_i, r_p):
-        #         print("ruh roh, one circle is inside the other")
-        #         return
-        #     h = 0.5 + (r_i*r_i - r_p*r_p) / (2 * d*d) # ratio of circle sizes
-        #     r_j = np.sqrt(r_i*r_i - h*h * d*d) # distance from center line 
-        #     c_j = c_i + h * (c_p - c_i) # point along center line
-        #     t = (np.cross(c_p - c_i, n_i))/norm(np.cross(c_p - c_i, n_i))
-        #     p_0 = c_j - t * r_j
-        #     p_1 = c_j + t * r_j
-        #     return p_0,p_1
             
         def higher_pt(pt_0,pt_1):
             if pt_1[2] > pt_0[2]:
