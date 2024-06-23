@@ -261,7 +261,6 @@ class KinSolve:
 
         for i in range(1, steps+1):
             
-            stp = v_move * i
             # Generate lower arm movement
             p0,p1 = intersection_sphere_circle (self.lower_wishbone[2].origin, v_move * i, n_l, c_l, r_l)
             
