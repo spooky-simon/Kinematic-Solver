@@ -5,7 +5,7 @@ Created on Tue Jul 12 13:21:41 2022
 
 @author: simon
 """
-from kinsolve import *
+from kinsolve-v0 import *
 
 
 def main():
