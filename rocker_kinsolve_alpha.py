@@ -419,7 +419,6 @@ class KinSolve:
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
         bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
         roll_ang = [-np.degrees(sin(z / (self.wheel_center.origin[1]))) for z in bump_zs]
-        print(bump_zs[0],bump_zs[-1])
         
         # Rocker calcs
         print("* Shock Travel")
@@ -454,15 +453,11 @@ class KinSolve:
                 return pt_1
             return pt_0
 
-        # Populate pro.hist
-        # print("Populating pro.hist")
         for c_s in self.lower_wishbone[2].hist:
             r_s = norm(self.lower_wishbone[2].origin-self.p_rod[1].origin)
             (p1,p2) = intersection_sphere_circle(c_s, r_s, n_i, c_i, r_i)
             p = higher_pt(p1,p2)
             self.p_rod[1].hist.append(p)
-
-        # print("Pro.hist has been filled")
 
         # Circle of Rocker
         c_i = self.rocker.origin
@@ -470,15 +465,11 @@ class KinSolve:
         n_i = np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[0].origin))/norm(
             np.cross((self.rocker.origin - self.p_rod[0].origin),(self.rocker.origin - self.shock[0].origin)))
         
-        # Populate pri.hist
-        # print("Populating pri.hist")
         for c_s in self.p_rod[1].hist:
             r_s = norm(self.p_rod[0].origin-self.p_rod[1].origin)
             (p1,p2) = intersection_sphere_circle(c_s, r_s, n_i, c_i, r_i)
             p = higher_pt(p1,p2)
             self.p_rod[0].hist.append(p)
-
-        # print("Pri.hist has been filled")
 
         # find rotation of rocker
         # theta  = cos-1 [ (a · b) / (|a| |b|) ]
@@ -493,8 +484,6 @@ class KinSolve:
             a = self.rocker.origin-self.p_rod[0].hist[i-1]
             b = self.rocker.origin-self.p_rod[0].hist[i]
             rkr_ang_j[i-steps-1] = angle(a, b)
-            
-        # print(rkr_ang_r,rkr_ang_j)
         
         # def rotation_about_axis(pt,axis_a,axis_b,theta):
         def rotation_about_axis(pt,ctr,u_axis,theta):
@@ -641,22 +630,6 @@ class KinSolve:
             ax.set_xlabel('x ['+self.unit+']')
             ax.set_ylabel('y ['+self.unit+']')
             ax.set_zlabel('z ['+self.unit+']')
-            # Code Below Shows Steering Arm change at full jounce and rebound
-            # Used for debugging, you can ignore
-            # x1 = [xyz[0] for xyz in self.tie_rod[1].hist]
-            # y1 = [xyz[1] for xyz in self.tie_rod[1].hist]
-            # z1 = [xyz[2] for xyz in self.tie_rod[1].hist]
-            # sax = [xyz[0] for xyz in self.sa]
-            # say = [xyz[1] for xyz in self.sa]
-            # saz = [xyz[2] for xyz in self.sa]
-            # x2 = [a+b for a,b in zip(x1,sax)]
-            # y2 = [a+b for a,b in zip(y1,say)]
-            # z2 = [a+b for a,b in zip(z1,saz)]
-            # steps = len(x2)//2
-            # fig = plt.figure()
-            # ax = fig.add_subplot(111, projection='3d')
-            # for i in [0, steps, 2*steps-1]:
-            #     ax.plot((x1[i],x2[i]),(y1[i],y2[i]),(z1[i],z2[i]))
             
             # Code Below Shows King Pin change at full jounce and rebound
             # Used for debugging, you can ignore

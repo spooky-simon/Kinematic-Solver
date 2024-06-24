@@ -29,7 +29,6 @@ def main():
     tro = Point([55.1, 600, 163]) # Tie_Rod_Outer
     
     unit = "mm"  # used in graph axis labels, not used in code (yet...)
-
     
     # Pushrod or Pullrod Points
     # The P-rod inner point is the outboard (usually) point of the rocker/bellcrank
@@ -82,7 +81,7 @@ def main():
 
         unit=unit,
     )
-
+    
     """ Solver Parameters """
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
@@ -112,9 +111,9 @@ def main():
         scrub_gain = False, # Scrub change plot
         scrub_gain_in_deg = False,    # Sets y-axis of scrub gain plot to roll angle in deg
 
-        roll_center_in_roll=True,  # Path of roll center as the car rolls
+        roll_center_in_roll=False,  # Path of roll center as the car rolls
         
-        motion_ratio=False, # Motion Ratio vs vertical travel
+        motion_ratio=True, # Motion Ratio vs vertical travel
         motion_ratio_in_deg=False # Sets y-axis of motion ratio plot to roll angle in deg
     )
 
