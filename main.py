@@ -55,16 +55,6 @@ def main():
     toe = 0
     camber = 0
     caster = 0
-
-    """ Input the list of points that each moving point is linked to below. """
-    # Each point listed in moving_points needs a list of friends.
-    # The default in the code should apply to all standard SLA/double wishbone setups.
-    # This includes linking the upper and lower upright points
-    # as that length cannot be allowed to change
-    wc.friends = [uo, lo, tro]
-    uo.friends = [ufi, uai, wc, tro, lo]
-    lo.friends = [lfi, lai, wc, tro, uo]
-    tro.friends = [uo, lo, wc, tri]
     
     kin = KinSolve(
         wheel_center=wc,
@@ -94,7 +84,14 @@ def main():
         offset_camber=camber,
         offset_caster=caster
     )
-
+    
+    """Link Force Solver Inputs"""
+    Fx = 0 # should always be 0, but can include for your utilization
+    Fy = 100 # N
+    Fz = 100 # N
+    kin.linkforce(Fx, Fy, Fz)
+    
+    
     """ Plot """
     kin.plot(
         suspension=True,  # Visualize the corner

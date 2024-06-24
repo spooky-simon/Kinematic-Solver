@@ -176,7 +176,6 @@ class KinSolve:
     unit: str = "mm"
 
     # Solved values
-    sa = None
     bump_steer: List[float] = None
     camber_gain: List[float] = None
     caster_gain: List[float] = None
@@ -549,8 +548,58 @@ class KinSolve:
         self.contactpatch_yz = cp_yz
         self.scrub_radius = sr
         # self.moving_points = moving_points
-        return  self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius
+        return  (self.wheel_center, self.lower_wishbone, self.upper_wishbone,
+                 self.p_rod, self.tie_rod,
+                 self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs,
+                 self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius)
                 # self.moving_points
+
+    def linkforce(self, Fx = 0, Fy = 0, Fz = 0):
+        
+        # https://fswiki.us/Suspension_Forces
+        # I'm gonna do some funky moves here so hold on
+        
+        # Step 0: find vectors, norms, and normal vectors for each of the 6 links
+        # norms
+        lenLF = norm(self.lower_wishbone[0].origin - self.lower_wishbone[2].origin)
+        lenLA = norm(self.lower_wishbone[1].origin - self.lower_wishbone[2].origin)
+        lenUF = norm(self.upper_wishbone[0].origin - self.upper_wishbone[2].origin)
+        lenUA = norm(self.upper_wishbone[1].origin - self.upper_wishbone[2].origin)
+        lenTR = norm(self.tie_rod[0].origin - self.tie_rod[1].origin)
+        lenPR = norm(self.p_rod[0].origin - self.p_rod[1].origin)
+        
+        # normal vectors
+        nLF = np.array([(self.lower_wishbone[0].origin - pt)/lenLF for pt in self.lower_wishbone[2].hist])
+        nLA = np.array([(self.lower_wishbone[1].origin - pt)/lenLA for pt in self.lower_wishbone[2].hist])
+        nUF = np.array([(self.upper_wishbone[0].origin - pt)/lenUF for pt in self.upper_wishbone[2].hist])
+        nUA = np.array([(self.upper_wishbone[1].origin - pt)/lenUA for pt in self.upper_wishbone[2].hist])
+        nTR = np.array([(self.tie_rod[0].origin - pt)/lenTR for pt in self.tie_rod[1].hist])
+        nPR = np.array([(self.p_rod[0].origin - pt)/lenPR for pt in self.p_rod[1].hist])
+        
+        # Step 1: find all r vectors for our r x F equations. Since all the 
+        # forced are centered at the wheel center, this is the vector from 
+        # the wheel center to the 4 upright pickup points
+        r_u = np.array([pt - self.wheel_center.origin for pt in self.upper_wishbone[2].hist])
+        r_l = np.array([pt - self.wheel_center.origin for pt in self.lower_wishbone[2].hist])
+        r_tr = np.array([pt - self.wheel_center.origin for pt in self.tie_rod[1].hist])
+        r_pr = np.array([pt - self.wheel_center.origin for pt in self.p_rod[1].hist])
+        
+        # Step 2: we need a "unit moment" which instead of r x F we have r x n (unit vector)
+        # This is weird and i dont understand it enough to explain it, but the 
+        # matrix math we will do will end up scaling these by the correct magnitude
+        mLF = np.array([np.cross(a,b) for a,b in zip(r_l, nLF)])
+        mLA = np.array([np.cross(a,b) for a,b in zip(r_l, nLA)])
+        mUF = np.array([np.cross(a,b) for a,b in zip(r_u, nUF)])
+        mUA = np.array([np.cross(a,b) for a,b in zip(r_u, nUA)])
+        mTR = np.array([np.cross(a,b) for a,b in zip(r_tr, nTR)])
+        mPR = np.array([np.cross(a,b) for a,b in zip(r_pr, nPR)])
+        
+        A1 = np.hstack((np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2),
+                       np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
+        
+        # We have to get the Moments about each axis
+        
+        # print(A1.shape)
 
     def plot(self,
              suspension: bool = True,
