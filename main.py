@@ -5,7 +5,7 @@ Created on Tue Jul 12 13:21:41 2022
 
 @author: simon
 """
-from rocker_kinsolve_alpha import *
+from kinsolve import *
 
 
 def main():
