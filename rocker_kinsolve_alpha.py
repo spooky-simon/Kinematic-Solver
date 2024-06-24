@@ -16,28 +16,12 @@ class Point:
         The potatoes of the meat and potates of the code
         
         A "Point" is used to keep track of the location history for all moving points
-        as well as what points it is linked to which I call its "friends"
-        and how far it needs to be from its friends to be "happy"
         """
         self.coords = np.array(coords)  # to track coordinates of the point
-        self.jhist = []  # jounce history
-        self.rhist = []  # rebound history
+        # self.jhist = []  # jounce history
+        # self.rhist = []  # rebound history
         self.hist = []  # total travel history
-        self.friends = []  # list of points that this point is linked to
         self.origin = np.array(coords)  # to keep track of the static position
-
-    def jr_combine(self):
-        """
-        Function used to combine jounce and rebound history
-        :return: Full History
-        """
-        self.rhist.reverse()
-        # Last Value in rhist is the origin and we dont need a second copy of it
-        self.hist = self.rhist[:-1] + self.jhist
-        return self.hist
-
-    def __repr__(self) -> str:
-        return self.coords.__str__()
 
 def angle(v1: List[float], v2: List[float]):
     """
@@ -208,8 +192,6 @@ class KinSolve:
 
     def solve(self,
               steps: int = 5,
-              happy: float = 10 ** -3,
-              learning_rate: float = 10 ** -3,
               offset_toe: float = 0,
               offset_camber: float = 0,
               offset_caster: float = 0,
@@ -518,22 +500,18 @@ class KinSolve:
             
             return rot_pt
 
-        self.shock[1].jhist.append(self.shock[1].origin)
-        for theta in rkr_ang_j:
-            pt = rotation_about_axis(self.shock[1].jhist[-1], c_i, n_i, np.radians(theta))
-            self.shock[1].jhist.append(pt)
+        self.shock[1].hist.append(self.shock[1].origin)
 
-        self.shock[1].rhist.append(self.shock[1].origin)
         # Rebound angles are stored counting from full rebound in rkr _ang_r for some reason
         # not going to try to understand what I did or why a few years ago but it's easy enough
         # to just chug through the array backwards
         for theta in rkr_ang_r[::-1]:
-            pt = rotation_about_axis(self.shock[1].rhist[-1], c_i, -n_i, np.radians(theta))
-            self.shock[1].rhist.append(pt)
-        
-        self.shock[1].jr_combine()
+            pt = rotation_about_axis(self.shock[1].hist[0], c_i, -n_i, np.radians(theta))
+            self.shock[1].hist.insert(0, pt)
 
-        
+        for theta in rkr_ang_j:
+            pt = rotation_about_axis(self.shock[1].hist[-1], c_i, n_i, np.radians(theta))
+            self.shock[1].hist.append(pt)
 
         # find deltas in wheel travel and shock travel
         wc_z = [z for x,y,z in self.wheel_center.hist]
