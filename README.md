@@ -14,6 +14,7 @@
 * run main.py and enjoy:)
 
 #### MacPherson Strut
+* Stored in MacphersonStrut folder
 * just download strutsolve.py and strutmain.py into the same folder
 * open strutmain.py and input your parameters
 * run strutmain.py and then send me what errors you get
