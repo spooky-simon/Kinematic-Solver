@@ -310,15 +310,23 @@ class KinSolve:
         
         # Bump steer is first up
         print("* Bump Steer")
-        # Calculate the 'gemoetric steering arm' by finding the vector from tie rod pickup point to king pin
-        # Projecting the steeing arm into the XY plane
-        # Measuring the angle change from the static position
-        sa = [pt_to_ln(tro, uo, lo) for tro, uo, lo in
-              zip(self.tie_rod[1].hist, self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)]
-        sa_xy = [[x, y] for x, y, z in sa]  # project into xy plane (top view)
-        bmp_str = [angle(v, [1, 0]) for v in sa_xy]  # angle bw v1 and x axis
-        bmp_str = [i - bmp_str[steps] + offset_toe for i in bmp_str] # campare to static
-
+        
+        # Find vertical XY projection of axle/hub
+        # Find angular change of that projection from static
+        # Axle in static should be y axis + static toe
+        # The axle will rotate the same amount as the line from the wc to the king pin
+        # so I actually just have to find that
+        axl_static = pt_to_ln(self.wheel_center.origin, self.lower_wishbone[2].origin, self.upper_wishbone[2].origin)[:2]
+        axl_hist = [pt_to_ln(pt,a,b)[:2] for pt,a,b in zip(self.wheel_center.hist,
+                                                       self.lower_wishbone[2].hist,
+                                                       self.upper_wishbone[2].hist)]
+        # My angle function is only positive so i have to measure angle from an axis
+        # and subtract the static angle
+        static_ang = angle([0,1],axl_static)
+        bmp_str = [angle([0,1],v)-static_ang for v in axl_hist] # angle magnitude
+        
+        
+        
         print("* Camber Gain")
         # Projects the kingpin into the YZ plane to meaure camber
         # by measuring the angle between the kingpin and the Z axis
@@ -343,11 +351,15 @@ class KinSolve:
         # project to yz plane
         ui_mid = (self.upper_wishbone[0].origin+self.upper_wishbone[1].origin)/2
         upr = [ui_mid[1:] for i in self.upper_wishbone[2].hist]
+        # print(upr[-1])
+        # upr2 = ui_mid[1:]
         lwr = [self.lower_wishbone[0].origin[1:] for i in self.lower_wishbone[2].hist]
+        # print(lwr[-1])
         uo_yz = [i[1:] for i in self.upper_wishbone[2].hist]
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
         ic = [seg_intersect(a1, a2, b1, b2) for a1, a2, b1, b2 in ic_pts]
+        # print(ic[-1])
         # Find vector from wc to cp at static (v_0)
         # this vector will orignate at the origin which makes rotation easy
         # rotate it by camber gain in yz plane
@@ -407,6 +419,7 @@ class KinSolve:
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
         bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
         roll_ang = [-np.degrees(sin(z / (self.wheel_center.origin[1]))) for z in bump_zs]
+        print(bump_zs[0],bump_zs[-1])
         
         # Rocker calcs
         print("* Shock Travel")
@@ -537,7 +550,6 @@ class KinSolve:
                 
         # Save calculated values
         self.steps = steps
-        self.sa = sa
         self.camber_gain = cbr_gn
         self.caster_gain = cstr_gn
         self.roll_angle = roll_ang
@@ -548,7 +560,7 @@ class KinSolve:
         self.contactpatch_yz = cp_yz
         self.scrub_radius = sr
         # self.moving_points = moving_points
-        return  self.sa,self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius
+        return  self.camber_gain, self.caster_gain, self.roll_angle, self.bump_zs, self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius
                 # self.moving_points
 
     def plot(self,
@@ -698,7 +710,7 @@ class KinSolve:
             if abs(max(self.camber_gain)-min(self.camber_gain)) < 0.5:
                 ax.set_ylim([min(self.camber_gain)-0.25,max(self.camber_gain)+0.25])
     
-        if bump_steer:     
+        if bump_steer:
             fig, ax = plt.subplots()
             ax.axhline(y= 0,color='k', linestyle ='dashed', alpha = 0.25)
             if bump_steer_in_deg:

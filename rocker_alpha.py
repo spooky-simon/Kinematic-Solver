@@ -23,7 +23,7 @@ def main():
     # Upper Wishbone
     ufi = Point([120.1,	    240,	223]) # Upper_Fore_Inner
     uai = Point([-120.1,	240,	216]) # Upper_Aft_Inner
-    uo  = Point([-7.1,	    595,	299]) # Upper_Upright_Point
+    uo  = Point([-7.13,	    595,	299]) # Upper_Upright_Point
     # Tie Rod or Steering Rod
     tri = Point([55.1, 140, 163]) # Tie_Rod_Inner
     tro = Point([55.1, 600, 163]) # Tie_Rod_Outer
