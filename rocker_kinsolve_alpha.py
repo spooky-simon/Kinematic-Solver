@@ -13,13 +13,8 @@ import sys
 class Point:
     def __init__(self, coords):
         """
-        The potatoes of the meat and potates of the code
-        
         A "Point" is used to keep track of the location history for all moving points
         """
-        self.coords = np.array(coords)  # to track coordinates of the point
-        # self.jhist = []  # jounce history
-        # self.rhist = []  # rebound history
         self.hist = []  # total travel history
         self.origin = np.array(coords)  # to keep track of the static position
 
@@ -207,7 +202,8 @@ class KinSolve:
         
         t0 = time.time_ns()
         
-        v_move = 25/steps # mm
+        # Step 0: Initialize step size, linkage lengths, and lower a-arm array
+        v_move = self.full_jounce/steps # mm
         self.lower_wishbone[2].hist = [self.lower_wishbone[2].origin]
 
         uprt_ht = norm(self.upper_wishbone[2].origin- self.lower_wishbone[2].origin)
@@ -222,8 +218,8 @@ class KinSolve:
 
         # Step 1: Find the arcs traced out by the upper and lower outboard pickup points.
         # All orientations of the suspension linkages MUST have the upper and lower 
-        # Outboard pickup points along their respective arcs.
-        # These arcs are defined by a normal axis, a center point, and a radius
+        # outboard pickup points along their respective arcs.
+        # These arcs are defined by a normal axis, a center point, and a radius.
         n_u, c_u, r_u = intersection_of_spheres(self.upper_wishbone[0].origin, self.upper_wishbone[1].origin, self.upper_wishbone[2].origin)
         n_l, c_l, r_l = intersection_of_spheres(self.lower_wishbone[0].origin, self.lower_wishbone[1].origin, self.lower_wishbone[2].origin)
 
@@ -262,7 +258,7 @@ class KinSolve:
             # find both points of intersection
             p2, p3 = intersection_sphere_circle(pt, uprt_ht, n_u, c_u, r_u)
             
-            # since we know the upper pointis always above the lower (....)
+            # since we know the upper point is always above the lower point,
             # we can discard the lower point
             if p3[2] > p2[2]:
                 self.upper_wishbone[2].hist.append(p3)
@@ -345,9 +341,9 @@ class KinSolve:
 
         # ui_mid finds average point of anti-squat/dive geometry
         # project to yz plane
-        ui_mid = (self.upper_wishbone[0].coords+self.upper_wishbone[1].coords)/2
+        ui_mid = (self.upper_wishbone[0].origin+self.upper_wishbone[1].origin)/2
         upr = [ui_mid[1:] for i in self.upper_wishbone[2].hist]
-        lwr = [self.lower_wishbone[0].coords[1:] for i in self.lower_wishbone[2].hist]
+        lwr = [self.lower_wishbone[0].origin[1:] for i in self.lower_wishbone[2].hist]
         uo_yz = [i[1:] for i in self.upper_wishbone[2].hist]
         lo_yz = [i[1:] for i in self.lower_wishbone[2].hist]
         ic_pts = zip(upr, uo_yz, lwr, lo_yz)
