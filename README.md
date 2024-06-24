@@ -1,24 +1,17 @@
 # Kinematic-Solver
-
 * free to use, just throw me a mention somwhere
 * Limited to pure heave and pure roll (for now)
 * if you figure out a bug pls lmk
 * pair of scripts each for double wishbone and macpherson strut
   * macpherson stuff is prefixed w/ strut
 * See Naming_Convention for double wishbone points naming convention used in this script
-* code should be somewhat commented... grad descent algorithm partially stolen from wikipedia
-* Grad descent approach taken from Spinning Thumbs on yt
+* Grad descent version (v0 in archive folder) is deprecated but will still work
 
 ## How to use
 #### Double Wishbone
 * just download kinsolve.py and main.py into the same folder
 * open main.py and input your parameters
 * run main.py and enjoy:)
-
-#### Double Wishbone (with rocker)
-* Download rocker_alpha and rocker_kinsolve_alpha into same folder
-* Uses a different solver so it should be ~10x faster than the original kinsolve script depending on your machine
-* Use as above
 
 #### MacPherson Strut
 * just download strutsolve.py and strutmain.py into the same folder
@@ -34,9 +27,9 @@
 
 ## Future additions
 * working on a link force solver, check back... at some point in the future
-* ~~rocker geometry and dynamic motion ratios should be coming~~ Currently in an early unvalidated state
+* ~~rocker geometry and dynamic motion ratios should be coming~~
 * Report Generator to help organize all the information
-* ~~Analytical solver instead of grad descent~~ present in alpha version of rocker script
+* ~~Analytical solver instead of grad descent~~ present in v1.0 onwards
 * ~~verify new solver~~
 
 ## Known bugs
