@@ -9,6 +9,8 @@ from typing import Tuple, List
 from dataclasses import dataclass
 import matplotlib.collections as mcoll
 import sys
+import scipy
+from scipy.sparse import coo_array
 
 class Point:
     def __init__(self, coords):
@@ -406,17 +408,31 @@ class KinSolve:
         y_ind = [-sign(cross(a-b,a-c)) for a,b,c in zip(rc,gnd_pln_mid_pt,c)]
         rcr = [[y*y_ind,z*z_ind] for y,z,y_ind,z_ind in zip(rcr_y,rcr_z,y_ind,z_ind)]
         
-        print("* Scrub Radius changes")
-        # Intersects kingpin_yz with line [0,0]
-        # then gets norm from where the king pin intersects to contact patch
-        # ground line is found using contact patches found in roll calc
-        sr_pts = zip(uo_yz,lo_yz,cp_yz,opp_cp_yz)
-        kpi_int = [seg_intersect(a1, a2, b1, b2) for a1,a2,b1,b2 in sr_pts]
-        sr = [norm(a-b) for a,b in zip(kpi_int,cp_yz)]
+        print("* Scrub Radius changes")      
+        # Find kp intersect by going along kingpin the same distance as static 
+        # distance
+        kp_v = [a - b for a,b in zip(self.upper_wishbone[2].hist, self.lower_wishbone[2].hist)] # vector
+        kp_m = norm(self.upper_wishbone[2].origin - self.lower_wishbone[2].origin) # magnitude
+        kp_n = [v/kp_m for v in kp_v] # normal vector
+        
+        # get static length fron line-plane intersection from wikipedia
+        # https://en.wikipedia.org/wiki/Line%E2%80%93plane_intersection
+        p0 = np.array([0,0,0]) # point on plane
+        l0 = self.lower_wishbone[2].origin # point on line
+        n = np.array([0,0,1]) # ground plane normal line
+        d = dot((p0 - l0),n)/dot(kp_n[steps],n)
+        kp_intersect_static = l0 + kp_n[steps] * d
+        kpinter_static = norm(self.lower_wishbone[2].origin - kp_intersect_static)
+        self.kpinter = [pt - n * kpinter_static for pt,n in zip(self.lower_wishbone[2].hist, kp_n)]
+        # the scrub radius is just the delta between the y component
+        # of the wheel center and y component of the contact patch
+        bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        self.cp_new = [[wc[0],wc[1],z] for wc, z in zip(self.wheel_center.hist, bump_zs)]
+        sr = [cp[1] - kp[1] for cp,kp in zip(self.cp_new, self.kpinter)]
         
         # bump_zs is a list of the z height for each iterable in the code compared to static
         # roll_ang is a list of the body roll of the vehicle for each iterable in the code compared to static
-        bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
+        # bump_zs = [z - self.wheel_center.origin[2] for x,y,z in self.wheel_center.hist]
         roll_ang = [-np.degrees(sin(z / (self.wheel_center.origin[1]))) for z in bump_zs]
         
         # Rocker calcs
@@ -554,7 +570,7 @@ class KinSolve:
                  self.bump_steer, self.roll_center, self.instant_center, self.scrub_radius)
                 # self.moving_points
 
-    def linkforce(self, Fx = 0, Fy = 0, Fz = 0):
+    def linkforce(self, Fx = 0, Fy = 0, Fz = 0, pneumatic_trail = 0):
         
         # https://fswiki.us/Suspension_Forces
         # I'm gonna do some funky moves here so hold on
@@ -596,11 +612,62 @@ class KinSolve:
         
         A1 = np.hstack((np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2),
                        np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
+        # second copy if we need it
+        A2 = np.hstack((np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2),
+                       np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
         
+        # Step 3: find moments about each axis
+        # This will be self aligning torque, overturning moment, and any drive/briking
+        # torque
+        # Step 3a: find moment arms for each force
+        # mech_trail = where king pin intersects groud plane to cp in x
+        mech_trail = [cp[0] - kp[0] for cp,kp in zip(self.cp_new,self.kpinter)]
+        trail = [mt + pneumatic_trail for mt in mech_trail] # add pnuematic trail    
+        
+        # Step 3b: get moments
         # We have to get the Moments about each axis
-        
+        # We will analyze moments about wheel center
+        # Moment about x is Fz * distance from contact patch to wheel center in y
+        # which should be 0 (in theory) + Fy * distance from contact patch to 
+        # wheel center in z
+        # Moment about y should be Fx * distance from contact patch to wc in z
+        # which is 0 unless there is an acceleration or braking load + Fz * 
+        # distance from contact patch to wc in x (which is 0)
+        # Moment about z is Fx * distance from cp to wc in y (0) (self aligning torque "ish")
         # print(A1.shape)
-
+        Mx = [Fy * self.wheel_center.origin[2]] * (2 * self.steps + 1) 
+        My = [-Fx * self.wheel_center.origin[2]] * (2 * self.steps + 1) 
+        Mz = [Fx * sr + Fy * mt for sr, mt in zip(self.scrub_radius, mech_trail)]
+        
+        B1 = [[Fx, Fy, Fz, mx, my, mz] for mx,my,mz in zip(Mx,My,Mz)]
+        print(B1)
+        
+        # Step 4: Change A1 matrix to giant sparse 2d matrix so we can just compute them all at one time
+        # Instead of computing one by one
+        m,n,p = A2.shape
+        # Step 4a: get index matrix that will map rows of each 6x6 slice of A1 to 
+        # a row in a sparse matrix, so we need a list that goes from 0 to 2*steps+1
+        # repeating each digit so the list is 6* longer
+        I = np.repeat([range(m*n)],p)
+        # Step 4b: we need column indicies of the sparse matrix so we need 
+        # a matrix that repeated countes up to 6 higher 6 times then jumps by 6
+        J = np.tile(np.reshape(range(m*n),(m,n)),p).flatten()
+        # Now turn it into a huge sparse matrix
+        M = coo_array((A1.flatten(), (I,J)))
+        # grab a stack of 6x6 eye matrices to left divide M into, this does two things
+        # 1, it inverts all the 6x6 sub arrays and 2 it stacks them onto eachother
+        # to densify it
+        # RHS = np.tile(np.eye(p),(m,1))
+        # # print(M.shape, RHS.shape)
+        # Ainv = scipy.sparse.linalg.lsqr(RHS, M)
+        # Ainv = np.linalg.lstsq(M.toarray(), RHS, rcond = 0)
+        
+        x = scipy.sparse.linalg.spsolve(M,)
+        
+        
+        
+        
+        
     def plot(self,
              suspension: bool = True,
              

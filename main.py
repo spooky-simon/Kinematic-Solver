@@ -76,7 +76,7 @@ def main():
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
     # and it will result in a comprehensible amount of data
-    num_steps = 100
+    num_steps = 10
     
     kin.solve(
         steps=num_steps,
@@ -86,10 +86,11 @@ def main():
     )
     
     """Link Force Solver Inputs"""
-    Fx = 0 # should always be 0, but can include for your utilization
-    Fy = 100 # N
-    Fz = 100 # N
-    kin.linkforce(Fx, Fy, Fz)
+    # DOES NOT WORK YET
+    # Fx = 0 # should always be 0, but can include for your utilization
+    # Fy = 100 # N
+    # Fz = 100 # N
+    # kin.linkforce(Fx, Fy, Fz)
     
     
     """ Plot """
