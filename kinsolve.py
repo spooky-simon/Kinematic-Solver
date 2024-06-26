@@ -611,7 +611,15 @@ class KinSolve:
         mPR = np.array([np.cross(a,b) for a,b in zip(r_pr, nPR)])
         
         A1 = np.hstack((np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2),
-                       np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
+                        np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
+        # print(nLF)
+        q = np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2)
+        r = np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)
+        s = np.vstack((q,r))
+        # print(s.shape)
+        # print(A1.shape)
+        # print(mLF)
+        # print(r[:,1,:])
         # second copy if we need it
         A2 = np.hstack((np.stack((nLF, nLA, nUF, nUA, nTR, nPR), axis = 2),
                        np.stack((mLF, mLA, mUF, mUA, mTR, mPR), axis = 2)))
@@ -635,12 +643,13 @@ class KinSolve:
         # distance from contact patch to wc in x (which is 0)
         # Moment about z is Fx * distance from cp to wc in y (0) (self aligning torque "ish")
         # print(A1.shape)
-        Mx = [Fy * self.wheel_center.origin[2]] * (2 * self.steps + 1) 
-        My = [-Fx * self.wheel_center.origin[2]] * (2 * self.steps + 1) 
-        Mz = [Fx * sr + Fy * mt for sr, mt in zip(self.scrub_radius, mech_trail)]
+        Mx = [Fy * self.wheel_center.origin[2]] * (2 * self.steps + 1)
+        My = [-Fx * self.wheel_center.origin[2]] * (2 * self.steps + 1)
+        Mz = [-Fx * sr + Fy * mt for sr, mt in zip(self.scrub_radius, mech_trail)]
         
-        B1 = [[Fx, Fy, Fz, mx, my, mz] for mx,my,mz in zip(Mx,My,Mz)]
-        print(B1)
+        B1 = np.array([[Fx, Fy, Fz, mx, my, mz] for mx,my,mz in zip(Mx,My,Mz)]).flatten()
+        # B1 = np.array([[Fx, Fy, Fz, mx, my, mz] for mx,my,mz in zip(Mx,My,Mz)])
+        # print(B1)
         
         # Step 4: Change A1 matrix to giant sparse 2d matrix so we can just compute them all at one time
         # Instead of computing one by one
@@ -652,17 +661,37 @@ class KinSolve:
         # Step 4b: we need column indicies of the sparse matrix so we need 
         # a matrix that repeated countes up to 6 higher 6 times then jumps by 6
         J = np.tile(np.reshape(range(m*n),(m,n)),p).flatten()
-        # Now turn it into a huge sparse matrix
+        # Now turn it into a huge sparse diagonal block matrix where the 
+        # diagonal is made up of 6x6 matrices. This lets us solve every iteration
+        # in one solve step
         M = coo_array((A1.flatten(), (I,J)))
-        # grab a stack of 6x6 eye matrices to left divide M into, this does two things
-        # 1, it inverts all the 6x6 sub arrays and 2 it stacks them onto eachother
-        # to densify it
-        # RHS = np.tile(np.eye(p),(m,1))
-        # # print(M.shape, RHS.shape)
-        # Ainv = scipy.sparse.linalg.lsqr(RHS, M)
-        # Ainv = np.linalg.lstsq(M.toarray(), RHS, rcond = 0)
+
+        x = scipy.sparse.linalg.spsolve(M,B1)
+        # print(x.shape)
+        # print([x[i] for i in range(1206) if i%6 ==0 ])
+        # print(x[:6])
+        print(("LF: {}\n"+
+               "LU: {}\n"+
+               "UF: {}\n"+
+               "UA: {}\n"+
+               "TR: {}\n"+
+               "PR: {}\n").format(*[str(f) for f in x[:6]]))
         
-        x = scipy.sparse.linalg.spsolve(M,)
+        print("Max link force is:", max(x))
+        print("Min link force is:", min(x))
+        
+        # Debugging - x should sum to Fx, y should sum to Fy, z should sum to Fz
+        # print(sum([z for x,y,z in [(nLF, nLA, nUF, nUA, nTR, nPR)[i%6][0] * x[i] for i in range(12,18)]]))
+        
+        # Plot of link forces for debugging
+        # fig = plt.figure()
+        # ax = fig.add_subplot()
+        # ax.plot([x[i] for i in range(1206) if i%6 ==0])
+        # ax.plot([x[i] for i in range(1206) if i%6 ==1])
+        # ax.plot([x[i] for i in range(1206) if i%6 ==2])
+        # ax.plot([x[i] for i in range(1206) if i%6 ==3])
+        # ax.plot([x[i] for i in range(1206) if i%6 ==4])
+        # ax.plot([x[i] for i in range(1206) if i%6 ==5])
         
         
         

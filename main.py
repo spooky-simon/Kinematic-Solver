@@ -76,7 +76,7 @@ def main():
     # number of steps in each direction, so a value of 10 will yield 20 datapoints
     # algorithm runs fast enough that its fine to use 1000+, but 100 is just as accurate
     # and it will result in a comprehensible amount of data
-    num_steps = 10
+    num_steps = 100
     
     kin.solve(
         steps=num_steps,
@@ -87,10 +87,10 @@ def main():
     
     """Link Force Solver Inputs"""
     # DOES NOT WORK YET
-    # Fx = 0 # should always be 0, but can include for your utilization
-    # Fy = 100 # N
-    # Fz = 100 # N
-    # kin.linkforce(Fx, Fy, Fz)
+    Fx = 0 # N
+    Fy = 0 # N
+    Fz = 100 # N
+    kin.linkforce(Fx, Fy, Fz)
     
     
     """ Plot """
@@ -111,7 +111,7 @@ def main():
 
         roll_center_in_roll=False,  # Path of roll center as the car rolls
         
-        motion_ratio=True, # Motion Ratio vs vertical travel
+        motion_ratio=False, # Motion Ratio vs vertical travel
         motion_ratio_in_deg=False # Sets y-axis of motion ratio plot to roll angle in deg
     )
 
