@@ -86,7 +86,7 @@ def main():
     )
     
     """Link Force Solver Inputs"""
-    # DOES NOT WORK YET
+    # NOT VALIDATED YET
     Fx = 0 # N
     Fy = 0 # N
     Fz = 100 # N

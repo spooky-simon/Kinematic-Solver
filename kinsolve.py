@@ -303,12 +303,13 @@ class KinSolve:
                 
             
         t1 = time.time_ns()
-        print("Solved everything in", (t1 - t0) / 10 ** 6, "ms")
+        print("Calculated suspension kinematics in", (t1 - t0) / 10 ** 6, "ms")
+        print()
         
         # Now we have all of our suspension kinematics
         # We can use these to do math and figure out kinematic behavior
         print("Calculating kinematic changes over wheel travel:")
-        
+        t0 = time.time_ns()
         # Bump steer is first up
         print("* Bump Steer")
         
@@ -324,9 +325,7 @@ class KinSolve:
         # My angle function is only positive so i have to measure angle from an axis
         # and subtract the static angle
         static_ang = angle([0,1],axl_static)
-        bmp_str = [angle([0,1],v)-static_ang for v in axl_hist] # angle magnitude
-        
-        
+        bmp_str = [angle([0,1],v)-static_ang for v in axl_hist] # angle magnitude        
         
         print("* Camber Gain")
         # Projects the kingpin into the YZ plane to meaure camber
@@ -551,6 +550,11 @@ class KinSolve:
         # and the ones at the end will just be a little off
         avg_mr = [a/b for a,b in zip(self.shock_travel,self.wheel_travel) if b > 0]
         self.mr = [avg_mr[0]] + [(mr1+mr2)/2 for mr1,mr2 in zip(avg_mr[:-1],avg_mr[1:])] + [avg_mr[-1]]
+        
+        t1 = time.time_ns()
+        print()
+        print("Calculated kinematic changes in", (t1 - t0) / 10 ** 6, "ms")
+        
                 
         # Save calculated values
         self.steps = steps
@@ -670,15 +674,15 @@ class KinSolve:
         # print(x.shape)
         # print([x[i] for i in range(1206) if i%6 ==0 ])
         # print(x[:6])
-        print(("LF: {}\n"+
-               "LU: {}\n"+
-               "UF: {}\n"+
-               "UA: {}\n"+
-               "TR: {}\n"+
-               "PR: {}\n").format(*[str(f) for f in x[:6]]))
+        # print(("LF: {}\n"+
+        #        "LU: {}\n"+
+        #        "UF: {}\n"+
+        #        "UA: {}\n"+
+        #        "TR: {}\n"+
+        #        "PR: {}\n").format(*[str(f) for f in x[:6]]))
         
-        print("Max link force is:", max(x))
-        print("Min link force is:", min(x))
+        # print("Max link force is:", max(x))
+        # print("Min link force is:", min(x))
         
         # Debugging - x should sum to Fx, y should sum to Fy, z should sum to Fz
         # print(sum([z for x,y,z in [(nLF, nLA, nUF, nUA, nTR, nPR)[i%6][0] * x[i] for i in range(12,18)]]))
